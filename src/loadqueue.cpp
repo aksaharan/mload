@@ -16,31 +16,32 @@
 #include "loadqueue.h"
 
 namespace loader {
-    namespace queue{
-        LoadQueue::LoadQueue(LoadQueueHolder *owner, const Bson &UBIndex) :
-            _owner(owner),
-            _queueSize(_owner->settings().queueSize),
-            _opAgg(_owner->getOpAggForChunk(UBIndex)),
-            _UBIndex(UBIndex) {
+    namespace queue {
+        LoadQueue::LoadQueue( LoadQueueHolder *owner, const Bson &UBIndex ) :
+                _owner( owner ),
+                _queueSize( _owner->settings().queueSize ),
+                _opAgg( _owner->getOpAggForChunk( UBIndex ) ),
+                _UBIndex( UBIndex )
+        {
         }
 
-
-        void LoadQueueHolder::init(const cpp::mtools::MongoCluster::NameSpace &ns) {
+        void LoadQueueHolder::init( const cpp::mtools::MongoCluster::NameSpace &ns ) {
             std::unordered_map<cpp::mtools::MongoCluster::ShardName, size_t> shardChunkCounters;
-            //Assuming that nsChunks is in sorted order, or the stage setup won't work right
-            for(auto &iCm: _mCluster.nsChunks(ns)) {
-                _inputPlan.insertUnordered(std::get<0>(iCm), LoadQueuePointer{});
-                size_t depth = ++(shardChunkCounters[std::get<1>(iCm)->first]);
-                if(depth <= DIRECT_LOAD)
-                    //TODO: change this to a factory that creates queues based on chunk depth in the shard
-                    _inputPlan.back() = DirectLoadQueue::create(this, std::get<0>(iCm));
-                else
-                    _inputPlan.back() = RAMLoadQueue::create(this, std::get<0>(iCm), _settings.sortIndex);
+            //Assumes that nsChunks is in sorted order, or the stage setup won't work right
+            for ( auto &iCm : _mCluster.nsChunks( ns ) ) {
+                _inputPlan.insertUnordered( std::get<0>( iCm ), LoadQueuePointer { } );
+                size_t depth = ++( shardChunkCounters[std::get<1>( iCm )->first] );
+                if ( depth <= DIRECT_LOAD )
+                //TODO: change this to a factory that creates queues based on chunk depth in the shard
+                _inputPlan.back() = DirectLoadQueue::create( this, std::get<0>( iCm ) );
+                else _inputPlan.back() = RAMLoadQueue::create( this,
+                                                               std::get<0>( iCm ),
+                                                               _settings.sortIndex );
             }
         }
 
         void LoadQueueHolder::clean() {
-            for(auto &i: _inputPlan)
+            for ( auto &i : _inputPlan )
                 i.second->clean();
         }
     } /* namespace queue */

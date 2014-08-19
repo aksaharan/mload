@@ -19,7 +19,6 @@
 #include <boost/lockfree/queue.hpp>
 #include "mongocxxdriver.h"
 
-
 namespace cpp {
     namespace mtools {
         /*
@@ -32,57 +31,86 @@ namespace cpp {
         using Data = bson::bo;
         using DataQueue = std::vector<Data>;
         using Connection = mongo::ScopedDbConnection;
+        /**
+         * Public interface for a database operation
+         * Base database operation
+         * Holds everything required to run the operation against the database
+         */
         struct DbOp {
         public:
-            DbOp() {}
-            virtual ~DbOp() {}
-            virtual OpReturnCode run(Connection &conn) = 0;
+            //TODO: use return codes for real async.  Just a function, keep empty base class.
+            DbOp() {
+            }
+            virtual ~DbOp() {
+            }
+            /**
+             * Executes the operation against the database connection
+             */
+            virtual OpReturnCode run( Connection &conn ) = 0;
         };
         using DbOpPointer = std::unique_ptr<DbOp>;
 
+        /**
+         * Public interface for a queue of database operations
+         */
         class OpQueue {
         public:
-            OpQueue() { }
-            virtual ~OpQueue() { }
+            OpQueue() {
+            }
+            virtual ~OpQueue() {
+            }
 
-            virtual OpReturnCode push(DbOpPointer &dbOp) = 0;
-            virtual OpReturnCode pop(DbOpPointer &dbOp) = 0;
+            virtual OpReturnCode push( DbOpPointer &dbOp ) = 0;
+            virtual OpReturnCode pop( DbOpPointer &dbOp ) = 0;
         };
 
+        /**
+         * A lockfree implementation of the OpQueue
+         */
         class OpQueueNoLock : public OpQueue {
         public:
 
-            OpQueueNoLock(size_t queueSize): _queue(queueSize) {}
+            OpQueueNoLock( size_t queueSize ) :
+                    _queue( queueSize )
+            {
+            }
             ~OpQueueNoLock();
 
-
-            inline OpReturnCode push(DbOpPointer &dbOp) {
-                return _queue.push(std::move(dbOp).release());
+            inline OpReturnCode push( DbOpPointer &dbOp ) {
+                return _queue.push( std::move( dbOp ).release() );
             }
 
-            inline OpReturnCode pop(DbOpPointer &dbOp) {
+            inline OpReturnCode pop( DbOpPointer &dbOp ) {
                 DbOp *rawptr;
-                bool result = _queue.pop(rawptr);
-                if(result)
-                    dbOp.reset(rawptr);
+                bool result = _queue.pop( rawptr );
+                if ( result ) dbOp.reset( rawptr );
                 return result;
             }
 
         private:
-            //boost::lockfree::queue<DbOp*, boost::lockfree::capacity<50>> _queue;
             boost::lockfree::queue<DbOp*> _queue;
         };
 
-        struct OpQueueBulkInsert : public DbOp {
-            OpQueueBulkInsert(std::string ns, DataQueue *data, int flags = 0, const WriteConcern *wc = DEFAULT_WRITE_CONCERN);
-            OpReturnCode run(Connection &conn);
+        /**
+         * Bulk insert operation.  Unordered.
+         */
+        struct OpQueueBulkInsertUnordered : public DbOp {
+            OpQueueBulkInsertUnordered( std::string ns,
+                               DataQueue *data,
+                               int flags = 0,
+                               const WriteConcern *wc = DEFAULT_WRITE_CONCERN );
+            OpReturnCode run( Connection &conn );
             std::string _ns;
             DataQueue _data;
             int _flags;
             const WriteConcern* _wc;
 
-            static DbOpPointer make(std::string ns, DataQueue *data, int flags = 0, const WriteConcern *wc = DEFAULT_WRITE_CONCERN) {
-                return DbOpPointer(new OpQueueBulkInsert(ns, data, flags, wc));
+            static DbOpPointer make( std::string ns,
+                                     DataQueue *data,
+                                     int flags = 0,
+                                     const WriteConcern *wc = DEFAULT_WRITE_CONCERN )
+            {
+                return DbOpPointer( new OpQueueBulkInsertUnordered( ns, data, flags, wc ) );
             }
         };
     } /*namespace mtools*/

@@ -18,57 +18,58 @@
 namespace loader {
     namespace opagg {
 
-        OpAggregator::OpAggregator(OpSettings settings):
-            _settings(std::move(settings)) {
-            if(_settings.owner->directLoad())
-                _ep = _settings.owner->getEndPointForChunk(_settings.chunkUB);
-            else
-                _ep = _settings.owner->getMongoSCycle();
+        OpAggregator::OpAggregator( OpSettings settings ) :
+                _settings( std::move( settings ) )
+        {
+            if ( _settings.owner->directLoad() ) _ep =
+                    _settings.owner->getEndPointForChunk( _settings.chunkUB );
+            else _ep = _settings.owner->getMongoSCycle();
         }
 
-        OpAggregatorHolder::OpAggregatorHolder(opagg::Settings settings, cpp::mtools::MongoCluster &mCluster, EndPointHolder *eph, cpp::mtools::MongoCluster::NameSpace ns):
-            _settings(std::move(settings)),
-            _tp(_settings.workThreads),
-            _mCluster(mCluster),
-            _eph(eph),
-            _ns(std::move(ns)),
-            _loadPlan(_settings.sortIndex) {
-            _wc.nodes(_settings.writeConcern);
+        OpAggregatorHolder::OpAggregatorHolder( opagg::Settings settings,
+                                                cpp::mtools::MongoCluster &mCluster,
+                                                EndPointHolder *eph,
+                                                cpp::mtools::MongoCluster::NameSpace ns ) :
+                _settings( std::move( settings ) ),
+                _tp( _settings.workThreads ),
+                _mCluster( mCluster ),
+                _eph( eph ),
+                _ns( std::move( ns ) ),
+                _loadPlan( _settings.sortIndex )
+        {
+            _wc.nodes( _settings.writeConcern );
             init();
         }
-
 
         void OpAggregatorHolder::init() {
             std::unordered_map<cpp::mtools::MongoCluster::ShardName, size_t> shardChunkCounters;
             //Assuming that nsChunks is in sorted order, or the stage setup won't work right
-            for(auto &iCm: _mCluster.nsChunks(ns())) {
-                _loadPlan.insertUnordered(std::get<0>(iCm), OpAggPointer{});
-                size_t depth = ++(shardChunkCounters[std::get<1>(iCm)->first]);
-                if(depth <= DIRECT_LOAD)
+            for ( auto &iCm : _mCluster.nsChunks( ns() ) ) {
+                _loadPlan.insertUnordered( std::get<0>( iCm ), OpAggPointer { } );
+                size_t depth = ++( shardChunkCounters[std::get<1>( iCm )->first] );
+                if ( depth <= DIRECT_LOAD )
                 //TODO: change this to a factory that creates queues based on chunk depth in the shard
-                    _loadPlan.back() = BypassOpAgg::create(this, _eph, std::get<0>(iCm));
-                else
-                    _loadPlan.back() = RAMQueueOpAgg::create(this, _eph, std::get<0>(iCm));
+                _loadPlan.back() = BypassOpAgg::create( this, _eph, std::get<0>( iCm ) );
+                else _loadPlan.back() = RAMQueueOpAgg::create( this, _eph, std::get<0>( iCm ) );
             }
         }
 
         OpAggregatorHolder::OrderedWaterFall OpAggregatorHolder::getWaterFall() {
             std::unordered_map<cpp::mtools::MongoCluster::ShardName, std::deque<OpAggregator*>> chunksort;
-            for(auto &i: _mCluster.nsChunks(_ns))
-                chunksort[std::get<1>(i)->first].emplace_back(getOpAggForChunk(std::get<0>(i)));
+            for ( auto &i : _mCluster.nsChunks( _ns ) )
+                chunksort[std::get<1>( i )->first].emplace_back( getOpAggForChunk( std::get<0>( i ) ) );
             OrderedWaterFall wf;
-            for(;;) {
+            for ( ;; ) {
                 bool added = false;
-                for(auto &i: chunksort) {
+                for ( auto &i : chunksort ) {
                     auto &q = i.second;
-                    if(q.size()) {
+                    if ( q.size() ) {
                         added = true;
-                        wf.push_back(q.back());
+                        wf.push_back( q.back() );
                         q.pop_back();
                     }
                 }
-                if(!added)
-                    break;
+                if ( !added ) break;
             }
             return wf;
         }
@@ -76,12 +77,12 @@ namespace loader {
         void RAMQueueOpAgg::doLoad() {
             cpp::mtools::DataQueue sendQueue;
             size_t queueSize = owner()->queueSize();
-            for(auto &i: _queue.unSafeAccess()) {
-                sendQueue.emplace_back(i.second);
-                if(sendQueue.size() >= queueSize) {
-                    send(&sendQueue);
+            for ( auto &i : _queue.unSafeAccess() ) {
+                sendQueue.emplace_back( i.second );
+                if ( sendQueue.size() >= queueSize ) {
+                    send( &sendQueue );
                     sendQueue.clear();
-                    sendQueue.reserve(queueSize);
+                    sendQueue.reserve( queueSize );
                 }
             }
         }

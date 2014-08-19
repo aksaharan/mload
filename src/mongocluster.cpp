@@ -19,88 +19,92 @@
 #include "mongocxxdriver.h"
 
 namespace cpp {
-namespace mtools {
+    namespace mtools {
 
-const bson::bo MongoCluster::CHUNK_SORT = BSON("max" << 1);
+        const bson::bo MongoCluster::CHUNK_SORT = BSON( "max" << 1 );
 
-MongoCluster::MongoCluster(std::string conn): _conn(std::move(conn)) {
-    load();
-}
-
-MongoCluster::~MongoCluster() { }
-
-void MongoCluster::clear() {
-    _shards.clear();
-    _nsChunks.clear();
-    _mongos.clear();
-}
-
-std::ostream& operator<<(std::ostream &o, MongoCluster &c) {
-    o << "Shards:" << "\n";
-    for(auto &i: c.shards())
-        o << i.first << " : " << i.second << "\n";
-
-    o << "\nChunks:" << "\n";
-    for(auto &i: c.nsChunks()) {
-        o << i.first << "\n";
-        for(auto &s: i.second.container())
-            o << "\tUpper Bound: " << s.first << " Shard: " << s.second->first << "\n";
-    }
-    o << "\nMongoS:" << "\n";
-    for(auto &i: c.mongos())
-        o << i << "\n";
-
-    return o;
-}
-
-
-void MongoCluster::load() {
-    clear();
-    //TODO: Add a sanity check this is actually a mongoS/ config server
-    mongo::DBClientConnection c;
-    c.connect(_conn);
-
-    //Load shards
-    mongo::Cursor cur(c.query("config.shards"));
-    while(cur->more()) {
-        bson::bo o = cur->next();
-        std::string shard = o.getStringField("_id");
-        std::string connect = o.getStringField("host");
-        if(shard.empty() || connect.empty())
-            throw std::logic_error("Couldn't load shards, empty values, is this a sharded cluster?");
-        _shards.emplace(std::move(shard), std::move(connect));
-    }
-
-    //Load chunks
-    cur = c.query("config.chunks", mongo::Query().sort(BSON("ns" << 1 << "max" << -1)));
-    std::string curNs;
-
-    ChunkShardMap *idx = NULL;
-    while(cur->more()) {
-        bson::bo o = cur->next();
-        std::string shard = o.getStringField("shard");
-        if(shard.empty())
-            throw std::logic_error("Couldn't load chunks, empty shard");
-        std::string ns = o.getStringField("ns");
-        if(ns.empty())
-            throw std::logic_error("Couldn't load chunks, empty namespace");
-        if(ns != curNs) {
-            if(idx)
-                idx->finalize();
-            curNs = ns;
-            idx = &_nsChunks.emplace(ns,ChunkShardMap(cpp::BSONObjCmp(BSON("max" << 1)))).first->second;
+        MongoCluster::MongoCluster( std::string conn ) :
+                _conn( std::move( conn ) )
+        {
+            load();
         }
-        idx->insertUnordered(o.getField("max").Obj().getOwned(), _shards.find(shard));
-    }
-    if(idx)
-        idx->finalize();
 
-    cur = c.query("config.mongos");
-    while(cur->more()) {
-        bson::bo o = cur->next();
-        _mongos.emplace_back(o.getStringField("_id"));
-    }
-}
+        MongoCluster::~MongoCluster() {
+        }
 
-} /* namespace mtools */
+        void MongoCluster::clear() {
+            _shards.clear();
+            _nsChunks.clear();
+            _mongos.clear();
+        }
+
+        std::ostream& operator<<( std::ostream &o, MongoCluster &c ) {
+            o << "Shards:" << "\n";
+            for ( auto &i : c.shards() )
+                o << i.first << " : " << i.second << "\n";
+
+            o << "\nChunks:" << "\n";
+            for ( auto &i : c.nsChunks() ) {
+                o << i.first << "\n";
+                for ( auto &s : i.second.container() )
+                    o << "\tUpper Bound: " << s.first << " Shard: " << s.second->first << "\n";
+            }
+            o << "\nMongoS:" << "\n";
+            for ( auto &i : c.mongos() )
+                o << i << "\n";
+
+            return o;
+        }
+
+        void MongoCluster::load() {
+            clear();
+            //TODO: Add a sanity check this is actually a mongoS/ config server
+            mongo::DBClientConnection c;
+            c.connect( _conn );
+
+            //Load shards
+            mongo::Cursor cur( c.query( "config.shards" ) );
+            while ( cur->more() ) {
+                bson::bo o = cur->next();
+                std::string shard = o.getStringField( "_id" );
+                std::string connect = o.getStringField( "host" );
+                if ( shard.empty() || connect.empty() ) throw std::logic_error( "Couldn't load shards, empty values, is this a sharded cluster?" );
+                _shards.emplace( std::move( shard ), std::move( connect ) );
+            }
+
+            //Load chunks
+            //As an integrity check chunks are loaded in reverse order and then sorted
+            cur = c.query( "config.chunks",
+                           mongo::Query().sort( BSON( "ns" << 1 << "max" << -1 ) ) );
+            std::string curNs;
+
+            ChunkShardMap *idx = NULL;
+            while ( cur->more() ) {
+                bson::bo o = cur->next();
+                std::string shard = o.getStringField( "shard" );
+                if ( shard.empty() ) throw std::logic_error( "Couldn't load chunks, empty shard" );
+                std::string ns = o.getStringField( "ns" );
+                if ( ns.empty() ) throw std::logic_error( "Couldn't load chunks, empty namespace" );
+                if ( ns != curNs ) {
+                    if ( idx ) idx->finalize();
+                    curNs = ns;
+                    idx = &_nsChunks.emplace( ns,
+                                              ChunkShardMap( cpp::BSONObjCmp( BSON( "max" << 1 ) ) ) )
+                            .first->second;
+                }
+                idx->insertUnordered( o.getField( "max" ).Obj().getOwned(), _shards.find( shard ) );
+            }
+            //Sort chunks here.
+            if ( idx ) idx->finalize();
+            //TODO: Add assert loop to ensure sorter works
+
+            //Get all the mongoS
+            cur = c.query( "config.mongos" );
+            while ( cur->more() ) {
+                bson::bo o = cur->next();
+                _mongos.emplace_back( o.getStringField( "_id" ) );
+            }
+        }
+
+    } /* namespace mtools */
 } /* namespace cpp */

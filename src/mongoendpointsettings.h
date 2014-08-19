@@ -18,6 +18,9 @@
 namespace cpp {
     namespace mtools {
 
+        /**
+         * End point settings, here to for simple dependencies
+         */
         struct EndPointSettings {
             bool startImmediate;
             bool directLoad;
@@ -27,7 +30,5 @@ namespace cpp {
         };
     }
 }
-
-
 
 #endif /* MONGOENDPOINTSETTINGS_H_ */

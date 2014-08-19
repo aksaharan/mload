@@ -13,7 +13,6 @@
  *    limitations under the License.
  */
 
-
 #ifndef TOOLS_H_
 #define TOOLS_H_
 
@@ -31,19 +30,17 @@
 
 namespace cpp {
 
-
-    #ifdef __linux__
-    inline size_t getTotalSystemMemory()
-    {
-        long pages = sysconf(_SC_PHYS_PAGES);
-        long page_size = sysconf(_SC_PAGE_SIZE);
+#ifdef __linux__
+    inline size_t getTotalSystemMemory() {
+        long pages = sysconf( _SC_PHYS_PAGES );
+        long page_size = sysconf( _SC_PAGE_SIZE );
         return pages * page_size;
     }
-    #endif
+#endif
 
     //TODO: rest of windows support
-    #ifdef __WIN32__
-    #include <windows.h>
+#ifdef __WIN32__
+#include <windows.h>
     inline size_t getTotalSystemMemory()
     {
         MEMORYSTATUSEX status;
@@ -51,37 +48,48 @@ namespace cpp {
         GlobalMemoryStatusEx(&status);
         return status.ullTotalPhys;
     }
-    #endif
+#endif
 
-
-    struct SfinaeTypes
-    {
+    /**
+     * Sfinae true/false
+     */
+    struct SfinaeTypes {
         typedef char one;
-        typedef struct { char arr[2]; } two;
+        typedef struct {
+            char arr[2];
+        } two;
     };
 
-    template <typename T>
+    /*
+     * Checks if a class tree has a shift left operator, e.g. <<
+     */
+    template<typename T>
     class HasShiftLeftImpl : public SfinaeTypes {
         struct BaseMixin {
-            friend std::ostream& operator<<(T t, std::ostream &o) { return o; }
+            friend std::ostream& operator<<( T t, std::ostream &o ) {
+                return o;
+            }
         };
 
-        struct Base : public T, public BaseMixin {};
-        template <typename H, H h> class Helper{};
-        template <typename U>
-        static constexpr two deduce(U*, Helper<void(BaseMixin::*)(), &U::operator<< >* = 0);
-        static constexpr one deduce(...);
+        struct Base : public T, public BaseMixin {
+        };
+        template<typename H, H h> class Helper {
+        };
+        template<typename U>
+        static constexpr two deduce( U*, Helper<void (BaseMixin::*)(), &U::operator<<>* = 0 );
+        static constexpr one deduce( ...);
 
     public:
-        static constexpr bool value = sizeof(one) == sizeof(deduce((Base*)(0)));
+        static constexpr bool value = sizeof(one) == sizeof( deduce( (Base*) ( 0 ) ) );
     };
 
-    template <typename T>
-    class HasShiftLeft: public HasShiftLeftImpl<T> { };
+    template<typename T>
+    class HasShiftLeft : public HasShiftLeftImpl<T> {
+    };
 
-
-
-
+    /**
+     * Simple timer
+     */
     template<typename T = std::chrono::high_resolution_clock>
     class SimpleTimer {
     public:
@@ -89,28 +97,36 @@ namespace cpp {
 
         TimePoint startTime, endTime;
 
-        void start() { startTime =  T::now(); }
-        void stop() { endTime = T::now(); }
+        void start() {
+            startTime = T::now();
+        }
+        void stop() {
+            endTime = T::now();
+        }
         long seconds() {
-            return std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime).count();
+            return std::chrono::duration_cast<std::chrono::seconds>( endTime - startTime ).count();
         }
 
         long nanos() {
-            return std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
+            return std::chrono::duration_cast<std::chrono::nanoseconds>( endTime - startTime ).count();
         }
 
         long millis() {
-            return std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+            return std::chrono::duration_cast<std::chrono::milliseconds>( endTime - startTime )
+                    .count();
         }
 
-        template <typename Td = std::chrono::nanoseconds>
+        template<typename Td = std::chrono::nanoseconds>
         Td duration() {
-            return std::chrono::duration_cast<Td>(endTime - startTime);
+            return std::chrono::duration_cast<Td>( endTime - startTime );
         }
     };
 
-
-    template<typename T = std::chrono::high_resolution_clock, template <typename, typename> class Tc = std::deque>
+    /**
+     * Lap timer
+     */
+    template<typename T = std::chrono::high_resolution_clock,
+            template<typename, typename > class Tc = std::deque>
     class LapTimer {
     public:
         using TimePoint = typename T::time_point;
@@ -119,11 +135,13 @@ namespace cpp {
         TimePoint checkTime;
         ContainerType laps;
 
-        void start() { checkTime =  T::now(); }
+        void start() {
+            checkTime = T::now();
+        }
 
         void lap() {
             TimePoint end = T::now();
-            laps.emplace_back(end - checkTime);
+            laps.emplace_back( end - checkTime );
             checkTime = end;
         }
 
@@ -132,53 +150,53 @@ namespace cpp {
             start();
         }
 
-        void reserver(size_t size) {
-            laps.reserve(size);
+        void reserver( size_t size ) {
+            laps.reserve( size );
         }
         //template < typename U = std::chrono::nanoseconds >
         long duration() {
-            TimePoint total = std::accumulate(std::begin(laps), std::end(laps), TimePoint{});
-            return std::chrono::duration_cast<std::chrono::nanoseconds>(total).count();
+            TimePoint total = std::accumulate( std::begin( laps ),
+                                               std::end( laps ),
+                                               TimePoint { } );
+            return std::chrono::duration_cast<std::chrono::nanoseconds>( total ).count();
         }
 
         //template < typename U = std::chrono::nanoseconds>
         unsigned long long avg() {
-            if(laps.empty())
-                return 0;
+            if ( laps.empty() ) return 0;
             return duration() / laps.size();
             //return duration<U>() / laps.size();
         }
 
-        /*
-        long nanos() {
-            return std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
-        }
-
-        template <typename Td = std::chrono::nanoseconds>
-        Td duration() {
-            return std::chrono::duration_cast<Td>(endTime - startTime);
-        }
-        */
     };
 
-    template <typename E>
-    class Timer {
+    /**
+     * Event timer.  Stores an event along with the time it occured
+     */
+    template<typename E>
+    class EventTimer {
     public:
         using EventTime = std::tuple<std::chrono::high_resolution_clock::time_point, E>;
         std::deque<EventTime> events;
 
-        void insertEvent(E event) {
-            EventTime inter = EventTime(std::chrono::high_resolution_clock::now(), event);
-            events.push_back(inter);
+        void insertEvent( E event ) {
+            EventTime inter = EventTime( std::chrono::high_resolution_clock::now(), event );
+            events.push_back( inter );
         }
     };
 
+    /*
+     * Arg 2 is the ceiling.  If Arg1 exceeds the ceiling the ceiling is returned using Arg1's type
+     */
     template<typename T, typename U>
-    T SetCeiling(const T &t, const U &u) {
-      return t > u ? T(u) : t;
+    T SetCeiling( const T &t, const U &u ) {
+        return t > u ? T( u ) : t;
     }
 
 
+    /*
+     * Disk reference types
+     */
     using LogicalDiskMapping = std::vector<std::string>;
 
     //TODO: make LocSegment a file name and start/end (64 bit ints)
@@ -201,9 +219,9 @@ namespace cpp {
         int length;
     };
 
-    template <typename Tp, typename... Args>
-    inline std::unique_ptr<Tp> make_unique(Args ...args) {
-        return std::unique_ptr<Tp>(new Tp(std::forward<Args>(args)...));
+    template<typename Tp, typename ... Args>
+    inline std::unique_ptr<Tp> make_unique( Args ...args ) {
+        return std::unique_ptr<Tp>( new Tp( std::forward<Args>(args)... ) );
     }
 } /* namespace cpp */
 

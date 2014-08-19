@@ -30,6 +30,10 @@ namespace loader {
     using BsonQ = std::deque<mongo::BSONObj>;
     using BsonPairDeque = std::deque<std::pair<mongo::BSONObj, mongo::BSONObj>>;
 
+    /**
+     * Individual queue settings.  These are the queues used by the input classes
+     * Common def here so dependencies are clean
+     */
     namespace queue {
         struct Settings {
             mongo::BSONObj sortIndex;
@@ -39,6 +43,10 @@ namespace loader {
         };
     }
 
+    /**
+     * Individual opagg settings.  These are the loader queues that aggregate operations
+     * Common def here so dependencies are clean
+     */
     namespace opagg {
         struct Settings {
             int writeConcern;
@@ -52,6 +60,10 @@ namespace loader {
         };
     }
 
+    /**
+     * Loader settings.
+     * Common def here so dependencies aren't circular.
+     */
     class Settings {
     public:
         using FieldKeys = std::vector<std::string>;
@@ -83,38 +95,43 @@ namespace loader {
             return !shards.empty();
         }
 
-        std::string ns() const { return database + "." + collection; }
+        std::string ns() const {
+            return database + "." + collection;
+        }
 
+        /**
+         * Check invariants and sets dependent settings
+         * Needs to be called once all the user input is read in
+         */
         void process() {
             endPointSettings.startImmediate = false;
             indexHas_id = false;
-            indexPos_id = size_t(-1);
-            size_t count{};
-            shardKeysBson = mongo::fromjson(shardKeyJson);
-            for(bson::bo::iterator i(shardKeysBson); i.more();) {
+            indexPos_id = size_t( -1 );
+            size_t count { };
+            shardKeysBson = mongo::fromjson( shardKeyJson );
+            for ( bson::bo::iterator i( shardKeysBson ); i.more(); ) {
                 bson::be key = i.next();
-                if(key.valueStringData() == std::string("hashed"))
-                    hashed = true;
-                else if (key.Int() != 1 && key.Int() != -1) {
-                    std::cerr << "Unknown value for key: " << key << "\nValues are 1, -1, hashed" << std::endl;
-                    exit(1);
+                if ( key.valueStringData() == std::string( "hashed" ) ) hashed = true;
+                else if ( key.Int() != 1 && key.Int() != -1 ) {
+                    std::cerr << "Unknown value for key: " << key << "\nValues are 1, -1, hashed"
+                              << std::endl;
+                    exit( 1 );
                 }
-                shardKeyFields.push_back(key.fieldName());
-                if(!indexHas_id && key.fieldNameStringData().toString() == "_id") {
+                shardKeyFields.push_back( key.fieldName() );
+                if ( !indexHas_id && key.fieldNameStringData().toString() == "_id" ) {
                     indexHas_id = true;
                     indexPos_id = count;
                 }
                 ++count;
             }
-            if(hashed && count > 1) {
-                std::cerr << "MongoDB currently only supporting hashing of a single field" << std::endl;
-                exit(1);
+            if ( hashed && count > 1 ) {
+                std::cerr << "MongoDB currently only supports hashing of a single field"
+                          << std::endl;
+                exit( 1 );
             }
-            if(!indexHas_id)
-                add_id = false;
+            if ( !indexHas_id ) add_id = false;
             opAggSettings.sortIndex = shardKeysBson;
             queueSettings.sortIndex = shardKeysBson;
-
 
             opAggSettings.workPath = workPath;
             opAggSettings.directLoad = endPointSettings.directLoad;
@@ -122,7 +139,5 @@ namespace loader {
         }
     };
 }
-
-
 
 #endif /* LOADERDEFS_H_ */

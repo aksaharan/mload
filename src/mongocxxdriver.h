@@ -20,7 +20,10 @@
 
 namespace mongo {
 
-    using Cursor = std::auto_ptr<mongo::DBClientCursor>;
+    /*
+     * Contains definitions for the C++ driver.  Insulation against changes.
+     */
+    using Cursor = std::unique_ptr<mongo::DBClientCursor>;
 } //namespace mongo
 
 #endif /* CXXDRIVER_HPP_ */

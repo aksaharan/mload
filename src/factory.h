@@ -21,7 +21,7 @@ namespace cpp {
      * Factory template
      */
     //TODO: factory template
-    template<typename Key, typename Value, typename Map, typename... Args>
+    template<typename Key, typename Value, typename Map, typename ... Args>
     class FactoryImpl {
         //static
     };

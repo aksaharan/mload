@@ -22,40 +22,42 @@
 
 #include "index.h"
 
-int main(int argc, char* argv[]) {
+int main( int argc, char* argv[] ) {
     cpp::SimpleTimer<> totalTimer;
     totalTimer.start();
     //C++ Driver
     mongo::client::initialize();
+    //TODO: remove mongoc_init when the c driver is removed from options
     //C Driver
     mongoc_init();
 
     //Program beings: read settings, then hand those settings off to the loader.
     loader::Settings settings;
-    loader::setProgramOptions(settings, argc, argv);
+    loader::setProgramOptions( settings, argc, argv );
 
     //C++ driver, remove the cdriver requirements.
-    settings.connection = settings.connection.substr(std::string("mongodb://").size());
-
+    settings.connection = settings.connection.substr( std::string( "mongodb://" ).size() );
 
     std::cout << "init finished" << std::endl;
 
     cpp::SimpleTimer<> timerLoad;
 
+    //Timer for only the load
     timerLoad.start();
-    //TODO: parse queue settings out of options
-    loader::Loader loader(settings);
+
+    //The actual loading
+    loader::Loader loader( settings );
     loader.run();
 
+    //End all timers
     timerLoad.stop();
     totalTimer.stop();
 
     long totalSeconds = totalTimer.seconds();
     long loadSeconds = timerLoad.seconds();
 
-    std::cout << "\n\n\n\nTotal time: " << totalSeconds / 60  << "m" << totalSeconds % 60 << "s"
-            << "\nLoad time: " << loadSeconds / 60  << "m" << loadSeconds % 60 << "s"
-            //<< "\nStats:\n" << loader.stats()
-            << std::endl;
+    std::cout << "\nTotal time: " << totalSeconds / 60 << "m" << totalSeconds % 60 << "s"
+              << "\nLoad time: " << loadSeconds / 60 << "m" << loadSeconds % 60 << "s"
+              << std::endl;
 
 }

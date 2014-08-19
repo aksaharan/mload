@@ -19,69 +19,93 @@
 
 namespace cpp {
 
-constexpr int MAX_ORDER_KEYS = 31;
+    //Depends on the same in mongo.  Ordering.h lines 67 (no constant defined...)
+    constexpr int MAX_ORDER_KEYS = 31;
 
-inline std::ostream& operator<< (std::ostream &o, mongo::Ordering &rhs) {
-    mongo::StringBuilder buf;
-    for ( unsigned i=0; i < MAX_ORDER_KEYS; i++)
-        buf.append( rhs.get(i) > 0 ? "+" : "-" );
-    o << buf.str();
-    return o;
-}
-
-
-class BSONObjCmp {
-public:
-    explicit BSONObjCmp(const bson::bo &o): _o(mongo::Ordering::make(o)) { }
-    explicit BSONObjCmp(mongo::Ordering o): _o(std::move(o)) { }
-    bool operator()(const bson::bo &l, const bson::bo &r) const {
-        return l.woCompare(r, _o, false) < 0;
-    }
-
-    mongo::Ordering ordering() const { return _o; }
-
-    operator std::string() const {
+    /**
+     * Prints out the ordering object information
+     */
+    inline std::ostream& operator<<( std::ostream &o, mongo::Ordering &rhs ) {
         mongo::StringBuilder buf;
-        for ( unsigned i=0; i< MAX_ORDER_KEYS; i++)
-            buf.append( _o.get(i) > 0 ? "+" : "-" );
-       return buf.str();
-    }
-
-    friend std::ostream& operator<< (std::ostream &o, BSONObjCmp &rhs) {
-        o << std::string(rhs);
+        for ( unsigned i = 0; i < MAX_ORDER_KEYS; i++ )
+            buf.append( rhs.get( i ) > 0 ? "+" : "-" );
+        o << buf.str();
         return o;
     }
 
+    /**
+     * wraps mongo::BSONObjCmp to insulate against changes
+     * Also makes it work for indexing used in index.h.
+     * The functions for std::sort are defined.
+     */
+    class BSONObjCmp {
+    public:
+        explicit BSONObjCmp( const bson::bo &o ) :
+                _o( mongo::Ordering::make( o ) )
+        {
+        }
+        explicit BSONObjCmp( mongo::Ordering o ) :
+                _o( std::move( o ) )
+        {
+        }
+        bool operator()( const bson::bo &l, const bson::bo &r ) const {
+            return l.woCompare( r, _o, false ) < 0;
+        }
 
-private:
-    const mongo::Ordering _o;
-};
+        mongo::Ordering ordering() const {
+            return _o;
+        }
 
-class BSONObjCmpDBG {
-public:
-    using KeyType = bson::bo;
+        operator std::string() const {
+            mongo::StringBuilder buf;
+            for ( unsigned i = 0; i < MAX_ORDER_KEYS; i++ )
+                buf.append( _o.get( i ) > 0 ? "+" : "-" );
+            return buf.str();
+        }
 
-    BSONObjCmpDBG(bson::bo o): _o(mongo::Ordering::make(o)) { }
-    BSONObjCmpDBG(mongo::Ordering o): _o(std::move(o)) { }
-    bool operator()(const bson::bo &l, const bson::bo &r) {
-        std::cerr << l.jsonString(mongo::JsonStringFormat::TenGen, true, false) << "::" << r.jsonString(mongo::JsonStringFormat::TenGen, true, false) << std::endl;
-        bool j = l.firstElement().Long() < r.firstElement().Long();
-        bool v = l.woCompare(r, _o, false) < 0;
-        if(j != v)
-            assert(j == v);
-        return v;
-    }
+        friend std::ostream& operator<<( std::ostream &o, BSONObjCmp &rhs ) {
+            o << std::string( rhs );
+            return o;
+        }
 
-    mongo::Ordering ordering() const { return _o; }
+    private:
+        const mongo::Ordering _o;
+    };
 
-    friend std::ostream& operator<< (std::ostream &o, BSONObjCmpDBG &rhs) {
-        //o << rhs.ordering();
-        return o;
-    }
+    class BSONObjCmpDBG {
+    public:
+        using KeyType = bson::bo;
 
-private:
-    const mongo::Ordering _o;
-};
+        BSONObjCmpDBG( bson::bo o ) :
+                _o( mongo::Ordering::make( o ) )
+        {
+        }
+        BSONObjCmpDBG( mongo::Ordering o ) :
+                _o( std::move( o ) )
+        {
+        }
+        bool operator()( const bson::bo &l, const bson::bo &r ) {
+            std::cerr << l.jsonString( mongo::JsonStringFormat::TenGen, true, false ) << "::"
+                      << r.jsonString( mongo::JsonStringFormat::TenGen, true, false ) << std::endl;
+            bool j = l.firstElement().Long() < r.firstElement().Long();
+            bool v = l.woCompare( r, _o, false ) < 0;
+            if ( j != v )
+            assert( j == v );
+            return v;
+        }
+
+        mongo::Ordering ordering() const {
+            return _o;
+        }
+
+        friend std::ostream& operator<<( std::ostream &o, BSONObjCmpDBG &rhs ) {
+            //o << rhs.ordering();
+            return o;
+        }
+
+    private:
+        const mongo::Ordering _o;
+    };
 
 } /* namespace cpp */
 

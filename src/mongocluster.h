@@ -27,73 +27,121 @@
 
 namespace cpp {
 
-namespace mtools {
+    namespace mtools {
 
 //TODO: replace asserts with exceptions
-/*
- * Represents a mongo cluster
- * IT IS CRITICAL THAT CHUNKS ARE SORTED IN ASCENDING ORDER
- */
-class MongoCluster {
-public:
+        /*
+         * Represents a mongo cluster
+         * All required cluster information can be taken from here.  (i.e. this is the config database)
+         * IT IS CRITICAL THAT CHUNKS ARE SORTED IN ASCENDING ORDER
+         * All other operations rely on upper_bound/sort being correct and they load the chunks
+         * from here.
+         */
+        class MongoCluster {
+        public:
+            //The sort for chunks.  "max": 1
+            static const bson::bo CHUNK_SORT;
+            using NameSpace = std::string;
+            using ShardName = std::string;
+            using ShardConn = std::string;
+            using ShardMap = std::unordered_map<ShardName, ShardConn>;
+            using ChunkIndexKey = bson::bo;
+            /*Holds the shard each chunk is on*/
+            using ChunkShardMap = cpp::Index<ChunkIndexKey, ShardMap::iterator, cpp::BSONObjCmp>;
+            /*Holds chunks for each name space*/
+            using NsChunkMap = std::unordered_map<NameSpace, ChunkShardMap>;
+            using Mongos = std::vector<std::string>;
+            MongoCluster() = delete;
+            explicit MongoCluster( std::string conn );
+            virtual ~MongoCluster();
 
-	static const bson::bo CHUNK_SORT;
-    /*Holds shard name vs. connection string*/
-	using NameSpace = std::string;
-	using ShardName = std::string;
-	using ShardConn = std::string;
-    using ShardMap = std::unordered_map<ShardName, ShardConn>;
-    using ChunkIndexKey = bson::bo;
-    /*Holds all nsChunks*/
-    using ChunkShardMap = cpp::Index<ChunkIndexKey, ShardMap::iterator, cpp::BSONObjCmp>;
-    using NsChunkMap = std::unordered_map<NameSpace, ChunkShardMap>;
-    using Mongos = std::vector<std::string>;
-    MongoCluster() = delete;
-    MongoCluster(std::string conn);
-    virtual ~MongoCluster();
+            /**
+             * @return access to shards and their connection strings
+             */
+            ShardMap& shards() {
+                return _shards;
+            }
 
-    ShardMap& shards() { return _shards; }
-    NsChunkMap& nsChunks() { return _nsChunks; }
-    Mongos& mongos() { return _mongos; }
-    ChunkShardMap& nsChunks(const std::string &ns) { return _nsChunks.at(ns); }
+            /**
+             * @return access to namespace chunks
+             */
+            NsChunkMap& nsChunks() {
+                return _nsChunks;
+            }
 
-    size_t chunksCount(const std::string &ns) const {
-        auto i = _nsChunks.find(ns);
-        if(i == _nsChunks.end())
-            return 0;
-        return i->second.size();
-    }
+            /**
+             * All chunks for a single namespace
+             */
+            ChunkShardMap& nsChunks( const std::string &ns ) {
+                return _nsChunks.at( ns );
+            }
 
-    const std::string& getConn(const std::string &shard) {
-        return _shards.at(shard);
-    }
+            /**
+             * access to mongos.
+             */
+            Mongos& mongos() {
+                return _mongos;
+            }
 
-    ShardName getShardForChunk(const std::string &ns, const ChunkIndexKey &key) {
-        return _nsChunks.at(ns).at(key)->first;
-    }
+            /**
+             * @return count of chunks for a single namespace
+             */
+            size_t chunksCount( const std::string &ns ) const {
+                auto i = _nsChunks.find( ns );
+                if ( i == _nsChunks.end() ) return 0;
+                return i->second.size();
+            }
 
-    template <typename T>
-    void getShardList(T *queue) const {
-        for(auto &i: _shards)
-            queue->push_back(i.first);
-    }
+            /**
+             * @return connection string for a shard
+             */
+            const std::string& getConn( const std::string &shard ) {
+                return _shards.at( shard );
+            }
 
-    friend std::ostream& operator<<(std::ostream &o, const MongoCluster &c);
+            /**
+             * @return given a namespace and chunk give back the shard it resides on
+             */
+            ShardName getShardForChunk( const std::string &ns, const ChunkIndexKey &key ) {
+                return _nsChunks.at( ns ).at( key )->first;
+            }
 
-private:
-    std::string _conn;
-    Mongos _mongos;
-    ShardMap _shards;
-    NsChunkMap _nsChunks;
+            /**
+             * Appends to a container a list of the shards.
+             * The container is NOT cleared.
+             */
+            template<typename T>
+            void getShardList( T *queue ) const {
+                for ( auto &i : _shards )
+                    queue->push_back( i.first );
+            }
 
-    void clear();
-    void load();
+            /**
+             * Writes the chunk config to the ostream
+             */
+            friend std::ostream& operator<<( std::ostream &o, const MongoCluster &c );
 
-};
+        private:
+            std::string _conn;
+            Mongos _mongos;
+            ShardMap _shards;
+            NsChunkMap _nsChunks;
 
-std::ostream& operator<<(std::ostream &o, MongoCluster &c);
+            /**
+             * clears all values for the loaded cluster
+             */
+            void clear();
 
-} /* namespace mtools */
+            /**
+             * loads values from the cluster from the _conn string
+             */
+            void load();
+
+        };
+
+        std::ostream& operator<<( std::ostream &o, MongoCluster &c );
+
+    } /* namespace mtools */
 } /* namespace cpp */
 
 #endif /* MONGOCLUSTER_H_ */

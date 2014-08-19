@@ -16,7 +16,6 @@
 #ifndef LOADER_H_
 #define LOADER_H_
 
-
 #include <vector>
 #include <fstream>
 #include <mongo/client/dbclient.h>
@@ -30,46 +29,79 @@
 #include "tools.h"
 #include "threading.h"
 
-//#define LOADER_SINGLE_THREADING
-
 namespace loader {
 
+    /**
+     *  Loader does all the work actually loading the mongoDs.
+     *  The main function in this class is run() which kicks the load off.
+     *  _mCluster must be accessed read only after initialization.
+     *  Loader assumes the balancer is turned off (we don't want the wasted efficient of chunk
+     *  moves while loading so this is reasonable and saves some work.
+     */
 
     class Loader {
     public:
         using MissTime = std::chrono::milliseconds;
+        /**
+         * LoaderStats is currently "dead".  It is being kept around for the next round of optimizations.
+         */
         struct LoaderStats {
             std::atomic<size_t> feederMisses;
             MissTime feederMissTime;
             size_t docFails;
 
-            LoaderStats(): feederMisses(), feederMissTime(), docFails() { }
-
-            friend std::ostream& operator<< (std::ostream &out, const LoaderStats &ls) {
-                //TODO: get misses working again in a reasonable manner
-                //out << "Feeder Misses: " << ls.feederMisses;// << " Loader Wait Time(ms):" << ns.count();
-                return out;
+            LoaderStats() :
+                    feederMisses(), feederMissTime(), docFails()
+            {
             }
+
         };
 
-        Loader(Settings settings);
+        explicit Loader( Settings settings );
 
-        const LoaderStats& stats() { return _stats; }
-
-        cpp::mtools::MongoCluster& cluster() { return  _mCluster; }
-        opagg::OpAggregatorHolder& opAgg() { return _opAgg; }
-        const Settings& settings() const { return _settings; }
-
-        void run();
-
-        bool loadComplete(const cpp::mtools::MongoCluster::ShardName &shard) {
-            assert(false);
-            return false;
+        /**
+         * Gets stats
+         */
+        const LoaderStats& stats() const {
+            return _stats;
         }
 
-        const queue::Settings& queueSettings() const { return _queueSettings; }
+        /**
+         * Get cluster
+         * Must be read only in multithreaded mode
+         */
+        cpp::mtools::MongoCluster& cluster() {
+            return _mCluster;
+        }
 
-        ~Loader() {}
+        /**
+         * Returns the opAggregator queues
+         */
+        opagg::OpAggregatorHolder& opAgg() {
+            return _opAgg;
+        }
+
+        /**
+         * Returns the settings.
+         */
+        const Settings& settings() const {
+            return _settings;
+        }
+
+        /**
+         * run() kicks off the loading process.
+         */
+        void run();
+
+        /**
+         * Returns the settings for loader queues.
+         */
+        const queue::Settings& queueSettings() const {
+            return _queueSettings;
+        }
+
+        ~Loader() {
+        }
 
     private:
         using FileQueue = cpp::ConcurrentQueue<cpp::LocSegment>;
@@ -92,26 +124,39 @@ namespace loader {
         opagg::OpAggregatorHolder::OrderedWaterFall _wf;
         cpp::Mutex _prepSetMutex;
 
-        bool enabledEndPoints() { return _endPoints.isRunning(); }
+        bool enabledEndPoints() {
+            return _endPoints.isRunning();
+        }
 
+        /**
+         * Start end points up
+         */
         void setEndPoints();
 
+        /**
+         * Creates the objects to read in the files and executes them.
+         * Thread safe
+         */
         void threadProcessFile();
+
+        /**
+         * Creates objects and runs the notifications to the queues that the load process has
+         * completed reading in all the files.
+         * Thread safe
+         */
         void threadPrepQueue();
+
+        /**
+         * Get the next chunk to notify of input file completion in shard chunk order.
+         * Thread safe
+         */
         opagg::OpAggregator* getNextPrep();
 
-        class PrepQueue {
-        public:
-            Loader &_owner;
-            const std::string _shard;
-
-            PrepQueue(Loader &owner, std::string shard) : _owner(owner), _shard(shard) { }
-
-            void run();
-        };
-
-        const std::string& getConn(const std::string &shard) {
-            return this->_mCluster.getConn(shard);
+        /**
+         * Resolves a connection for a shard
+         */
+        const std::string& getConn( const std::string &shard ) {
+            return this->_mCluster.getConn( shard );
         }
     };
 } //namespace loader
