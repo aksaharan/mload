@@ -75,10 +75,10 @@ namespace loader {
         }
 
         /**
-         * Returns the opAggregator queues
+         * Returns the ChunkDispatcher queues
          */
-        dispatch::ChunkDispatcher& opAgg() {
-            return _opDispatch;
+        dispatch::ChunkDispatcher& chunkDispatcher() {
+            return _chunkDispatch;
         }
 
         /**
@@ -96,7 +96,7 @@ namespace loader {
         /**
          * Returns the settings for loader queues.
          */
-        const queue::Settings& queueSettings() const {
+        const aggregator::Settings& queueSettings() const {
             return _queueSettings;
         }
 
@@ -109,10 +109,10 @@ namespace loader {
 
         LoaderStats _stats;
         const Settings _settings;
-        queue::Settings _queueSettings;
+        aggregator::Settings _queueSettings;
         cpp::mtools::MongoCluster _mCluster;
         EndPointHolder _endPoints;
-        dispatch::ChunkDispatcher _opDispatch;
+        dispatch::ChunkDispatcher _chunkDispatch;
 
         std::deque<std::string> shardList;
         size_t _ramMax;

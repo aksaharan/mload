@@ -22,7 +22,7 @@ namespace loader {
     InputProcessor::InputProcessor(Loader *owner, std::string ns) :
             _owner(owner),
             _ns(ns),
-            _queue(_owner->queueSettings(), owner->cluster(), &owner->opAgg(), ns),
+            _queue(_owner->queueSettings(), owner->cluster(), &owner->chunkDispatcher(), ns),
             _docLogicalLoc {}
     {
     }

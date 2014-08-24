@@ -16,12 +16,12 @@
 #include "inputqueue.h"
 
 namespace loader {
-    namespace queue {
-        LoadQueue::LoadQueue(LoadQueueHolder *owner, const Bson &UBIndex) :
+    namespace aggregator {
+        LoadQueue::LoadQueue(LoadQueueHolder *owner, Bson UBIndex) :
                 _owner(owner),
                 _queueSize(_owner->settings().queueSize),
                 _opAgg(_owner->getOpAggForChunk(UBIndex)),
-                _UBIndex(UBIndex)
+                _UBIndex(std::move(UBIndex))
         {
         }
 
@@ -31,12 +31,11 @@ namespace loader {
             for (auto &iCm : _mCluster.nsChunks(ns)) {
                 _inputPlan.insertUnordered(std::get<0>(iCm), LoadQueuePointer {});
                 size_t depth = ++(shardChunkCounters[std::get<1>(iCm)->first]);
-                if (depth <= DIRECT_LOAD)
                 //TODO: change this to a factory that creates queues based on chunk depth in the shard
-                _inputPlan.back() = DirectLoadQueue::create(this, std::get<0>(iCm));
-                else _inputPlan.back() = RAMLoadQueue::create(this,
-                                                              std::get<0>(iCm),
-                                                              _settings.sortIndex);
+                if (depth <= DIRECT_LOAD)
+                    _inputPlan.back() = DirectLoadQueue::create(this, std::get<0>(iCm));
+                else
+                    _inputPlan.back() = RAMLoadQueue::create(this, std::get<0>(iCm));
             }
         }
 

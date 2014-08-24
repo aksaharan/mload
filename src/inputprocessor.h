@@ -27,7 +27,7 @@ namespace loader {
      * This could change in the future but to keep lookups down it's probably better to
      * make sure that load segments are handed off by namespace if possible.
      */
-    class InputProcessor : public queue::LoadBuilder {
+    class InputProcessor : public aggregator::LoadBuilder {
     public:
         InputProcessor(Loader *owner, std::string ns);
         ~InputProcessor() {
@@ -47,7 +47,7 @@ namespace loader {
     private:
         Loader *_owner;
         const std::string _ns;
-        queue::LoadQueueHolder _queue;
+        aggregator::LoadQueueHolder _queue;
         cpp::LogicalLoc _docLogicalLoc;
         cpp::DocLoc _docLoc;
         std::string _docJson;

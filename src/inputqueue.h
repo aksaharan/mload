@@ -24,15 +24,10 @@
 #include "chunkdispatch.h"
 
 namespace loader {
-    namespace queue {
+    namespace aggregator {
 
         class LoadQueueHolder;
         class LoadQueue;
-        class DirectLoadQueue;
-
-        enum LoadQueueTypes {
-            DIRECT = 0, RAM, DISK, INDEXONLY
-        };
 
         using LoadQueuePointer = std::unique_ptr<LoadQueue>;
 
@@ -103,7 +98,7 @@ namespace loader {
             }
 
         protected:
-            LoadQueue(LoadQueueHolder *owner, const Bson &UBIndex);
+            LoadQueue(LoadQueueHolder *owner, Bson UBIndex);
 
         private:
             LoadQueueHolder *_owner;
@@ -188,7 +183,7 @@ namespace loader {
         class DirectLoadQueue : public LoadQueue {
         public:
             DirectLoadQueue(LoadQueueHolder *owner, Bson UBIndex) :
-                    LoadQueue(owner, UBIndex)
+                    LoadQueue(owner, std::move(UBIndex))
             {
                 _bsonHolder.reserve(queueSize());
             }
@@ -205,7 +200,7 @@ namespace loader {
                 if (!_bsonHolder.empty()) postTo()->push(&_bsonHolder);
             }
 
-            static LoadQueuePointer create(LoadQueueHolder *owner, Bson UBIndex) {
+            static LoadQueuePointer create(LoadQueueHolder *owner, const Bson &UBIndex) {
                 return LoadQueuePointer(new DirectLoadQueue(owner, UBIndex));
             }
 
@@ -219,8 +214,8 @@ namespace loader {
 
         class RAMLoadQueue : public LoadQueue {
         public:
-            RAMLoadQueue(LoadQueueHolder *owner, const Bson &UBIndex, const Bson &index) :
-                    LoadQueue(owner, UBIndex)
+            RAMLoadQueue(LoadQueueHolder *owner, Bson UBIndex) :
+                LoadQueue(owner, std::move(UBIndex))
             {
             }
 
@@ -239,11 +234,9 @@ namespace loader {
                 return _bsonHolder.empty();
             }
 
-            static LoadQueuePointer create(LoadQueueHolder *owner,
-                                           const Bson &UBIndex,
-                                           const Bson &index)
+            static LoadQueuePointer create(LoadQueueHolder *owner, Bson UBIndex)
             {
-                return LoadQueuePointer(new RAMLoadQueue(owner, UBIndex, index));
+                return LoadQueuePointer(new RAMLoadQueue(owner, std::move(UBIndex)));
             }
 
         private:

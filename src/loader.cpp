@@ -37,10 +37,10 @@ namespace loader {
 
     Loader::Loader(Settings settings) :
             _settings(std::move(settings)),
-            _queueSettings(_settings.queueSettings),
+            _queueSettings(_settings.aggregatorSettings),
             _mCluster {_settings.connection},
             _endPoints(settings.endPointSettings, _mCluster),
-            _opDispatch(_settings.opAggSettings, _mCluster, &_endPoints, _settings.ns()),
+            _chunkDispatch(_settings.dispatchSettings, _mCluster, &_endPoints, _settings.ns()),
             _ramMax {cpp::getTotalSystemMemory()},
             _threadsMax {(size_t) _settings.threads},
             _processedFiles {}
@@ -146,7 +146,7 @@ namespace loader {
          */
         size_t finalizeThreads = inputThreads;
         cpp::ThreadPool tpFinalize(finalizeThreads);
-        _wf = _opDispatch.getWaterFall();
+        _wf = _chunkDispatch.getWaterFall();
         tpInput.joinAll();
         std::cout << "Entering finalize phase" << std::endl;
 

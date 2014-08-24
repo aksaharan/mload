@@ -34,7 +34,7 @@ namespace loader {
      * Individual queue settings.  These are the queues used by the input classes
      * Common def here so dependencies are clean
      */
-    namespace queue {
+    namespace aggregator {
         struct Settings {
             mongo::BSONObj sortIndex;
             size_t queueSize;
@@ -87,8 +87,8 @@ namespace loader {
         FieldKeys shardKeyFields;
         Shards shards;
 
-        queue::Settings queueSettings;
-        dispatch::Settings opAggSettings;
+        aggregator::Settings aggregatorSettings;
+        dispatch::Settings dispatchSettings;
         cpp::mtools::EndPointSettings endPointSettings;
 
         bool shard() {
@@ -130,11 +130,11 @@ namespace loader {
                 exit(1);
             }
             if (!indexHas_id) add_id = false;
-            opAggSettings.sortIndex = shardKeysBson;
-            queueSettings.sortIndex = shardKeysBson;
+            dispatchSettings.sortIndex = shardKeysBson;
+            aggregatorSettings.sortIndex = shardKeysBson;
 
-            opAggSettings.workPath = workPath;
-            opAggSettings.directLoad = endPointSettings.directLoad;
+            dispatchSettings.workPath = workPath;
+            dispatchSettings.directLoad = endPointSettings.directLoad;
 
         }
     };
