@@ -13,15 +13,12 @@
  *    limitations under the License.
  */
 
-#ifndef PROGRAMOPTIONS_H_
-#define PROGRAMOPTIONS_H_
+#pragma once
 
-#include "loaderdefs.h"
+#include "loader.h"
 
 namespace loader {
 
-    void setProgramOptions(Settings &settings, int argc, char *argv[]);
+    void setProgramOptions(Loader::Settings &settings, int argc, char *argv[]);
 
 } /* namespace cpp */
-
-#endif /* PROGRAMOPTIONS_H_ */

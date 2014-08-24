@@ -25,6 +25,21 @@
 
 namespace loader {
     namespace dispatch {
+
+        /**
+         * Common settings for the loader::dispatch ns
+         */
+        struct Settings {
+            int writeConcern;
+            bool directLoad;
+            mongo::BSONObj sortIndex;
+            size_t queueSize;
+            std::string workPath;
+            size_t direct;
+            size_t RAM;
+            size_t workThreads;
+        };
+
         class ChunkDispatcher;
 
         /**
@@ -106,6 +121,7 @@ namespace loader {
             using Key = cpp::mtools::MongoCluster::ChunkIndexKey;
             using Value = ChunkDispatchPointer;
             using LoadPlan = cpp::Index<Key, Value, cpp::BSONObjCmp>;
+
             ChunkDispatcher(dispatch::Settings settings,
                                cpp::mtools::MongoCluster &mCluster,
                                EndPointHolder *eph,

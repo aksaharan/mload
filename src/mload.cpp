@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     mongoc_init();
 
     //Program beings: read settings, then hand those settings off to the loader.
-    loader::Settings settings;
+    loader::Loader::Settings settings;
     loader::setProgramOptions(settings, argc, argv);
 
     //C++ driver, remove the cdriver requirements.

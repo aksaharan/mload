@@ -13,8 +13,7 @@
  *    limitations under the License.
  */
 
-#ifndef BSONTOOLS_H_
-#define BSONTOOLS_H_
+#pragma once
 #include "mongocxxdriver.h"
 
 namespace cpp {
@@ -108,5 +107,3 @@ namespace cpp {
     };
 
 } /* namespace cpp */
-
-#endif /* BSONTOOLS_H_ */

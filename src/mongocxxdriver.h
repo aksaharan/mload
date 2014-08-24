@@ -13,8 +13,8 @@
  *    limitations under the License.
  */
 
-#ifndef CXXDRIVER_HPP_
-#define CXXDRIVER_HPP_
+#pragma once
+
 #include <memory>
 #include <mongo/client/dbclient.h>
 
@@ -22,8 +22,8 @@ namespace mongo {
 
     /*
      * Contains definitions for the C++ driver.  Insulation against changes.
+     * Changes auto_ptr to unique_ptr so mongo plays well with stl
      */
     using Cursor = std::unique_ptr<mongo::DBClientCursor>;
 } //namespace mongo
 
-#endif /* CXXDRIVER_HPP_ */

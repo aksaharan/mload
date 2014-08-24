@@ -13,8 +13,8 @@
  *    limitations under the License.
  */
 
-#ifndef INPUTPROCESSOR_H_
-#define INPUTPROCESSOR_H_
+#pragma once
+
 #include "inputaggregator.h"
 #include "inputformat.h"
 #include "mongocxxdriver.h"
@@ -60,4 +60,3 @@ namespace loader {
 
 } /* namespace loader */
 
-#endif /* INPUTPROCESSOR_H_ */

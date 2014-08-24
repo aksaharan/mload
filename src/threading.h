@@ -13,8 +13,7 @@
  *    limitations under the License.
  */
 
-#ifndef THREADING_H_
-#define THREADING_H_
+#pragma once
 
 #include <atomic>
 #include <assert.h>
@@ -206,5 +205,3 @@ namespace cpp {
     };
 
 } //namespace cpp
-
-#endif /* THREADING_H_ */

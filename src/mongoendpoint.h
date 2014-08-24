@@ -13,20 +13,29 @@
  *    limitations under the License.
  */
 
-#ifndef MONGOENDPOINT_H_
-#define MONGOENDPOINT_H_
+#pragma once
 
 #include <deque>
 #include <memory>
 #include <unordered_map>
 #include "mongocxxdriver.h"
 #include "mongocluster.h"
-#include "mongoendpointsettings.h"
 #include "mongooperations.h"
 #include "threading.h"
 
 namespace cpp {
     namespace mtools {
+
+        /*
+         * The settings for an MongoEndPoint.  The settings aren't a template so they are a separate.
+         */
+        struct MongoEndPointSettings {
+            bool startImmediate;
+            bool directLoad;
+            size_t queueSize;
+            size_t threadCount;
+            size_t sleepTime;
+        };
 
         /**
          * MongoDB end point (i.e. a mongoD or mongoD).
@@ -37,7 +46,7 @@ namespace cpp {
         template<typename TOpQueue = cpp::mtools::OpQueueNoLock>
         class BasicMongoEndPoint {
         public:
-            BasicMongoEndPoint(EndPointSettings settings, std::string connection) :
+            BasicMongoEndPoint(MongoEndPointSettings settings, std::string connection) :
                     _threadPool(settings.threadCount),
                     _connection(std::move(connection)),
                     _opQueue(settings.queueSize),
@@ -174,7 +183,7 @@ namespace cpp {
             //Note that ShardName can also be a mongoS, but in that case it doesn't much matter
             using MongoEndPointMap = std::unordered_map<cpp::mtools::MongoCluster::ShardName, MongoEndPointPtr>;
 
-            MongoEndPointHolder(EndPointSettings settings, MongoCluster &mCluster) :
+            MongoEndPointHolder(MongoEndPointSettings settings, MongoCluster &mCluster) :
                     _started( false)
             {
                 if (settings.directLoad) {
@@ -246,5 +255,3 @@ namespace cpp {
 
     } /* namespace mtools */
 } /* namespace cpp */
-
-#endif /* MONGOENDPOINT_H_ */

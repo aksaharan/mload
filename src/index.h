@@ -13,8 +13,7 @@
  *    limitations under the License.
  */
 
-#ifndef INDEX_H_
-#define INDEX_H_
+#pragma once
 
 #include <algorithm>
 #include <assert.h>
@@ -239,5 +238,3 @@ namespace cpp {
     template<typename Key, typename Value, typename Cmp = std::less<Key>> using Index = BasicIndex<Key, Value, Cmp>;
 
 } /* namespace cpp */
-
-#endif /* INDEX_H_ */

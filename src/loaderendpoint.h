@@ -13,8 +13,7 @@
  *    limitations under the License.
  */
 
-#ifndef LOADENDPOINT_H_
-#define LOADENDPOINT_H_
+#pragma once
 
 #include "mongoendpoint.h"
 
@@ -28,5 +27,3 @@ namespace loader {
     using EndPoint = EndPointHolder::MongoEndPoint;
 
 }
-
-#endif /* LOADENDPOINT_H_ */

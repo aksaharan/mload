@@ -26,7 +26,7 @@ namespace loader {
             else _ep = _settings.owner->getMongoSCycle();
         }
 
-        ChunkDispatcher::ChunkDispatcher(dispatch::Settings settings,
+        ChunkDispatcher::ChunkDispatcher(Settings settings,
                                                cpp::mtools::MongoCluster &mCluster,
                                                EndPointHolder *eph,
                                                cpp::mtools::MongoCluster::NameSpace ns) :

@@ -13,8 +13,7 @@
  *    limitations under the License.
  */
 
-#ifndef CONCURRENTCONTAINER_H_
-#define CONCURRENTCONTAINER_H_
+#pragma once
 
 #include <algorithm>
 #include <deque>
@@ -181,5 +180,3 @@ namespace cpp {
     template<typename Value, template<typename, typename > class Container = std::deque> using ConcurrentQueue = BasicConcurrentQueue<Value, Container>;
 
 } /* namespace cpp */
-
-#endif /* CONCURRENTCONTAINER_H_ */

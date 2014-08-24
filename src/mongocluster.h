@@ -13,8 +13,7 @@
  *    limitations under the License.
  */
 
-#ifndef MONGOCLUSTER_H_
-#define MONGOCLUSTER_H_
+#pragma once
 
 #include <unordered_map>
 #include <unordered_set>
@@ -143,5 +142,3 @@ namespace cpp {
 
     } /* namespace mtools */
 } /* namespace cpp */
-
-#endif /* MONGOCLUSTER_H_ */

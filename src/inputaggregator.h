@@ -17,14 +17,24 @@
 
 #include <memory>
 #include <unordered_map>
+#include "chunkdispatch.h"
 #include "index.h"
 #include "loaderdefs.h"
 #include "mongocxxdriver.h"
 #include "mongocluster.h"
-#include "chunkdispatch.h"
 
 namespace loader {
     namespace aggregator {
+
+        /**
+         * Common settings for the loader::aggregator ns
+         */
+        struct Settings {
+            mongo::BSONObj sortIndex;
+            size_t queueSize;
+            size_t direct;
+            size_t RAM;
+        };
 
         class InputAggregator;
         class AbstractInputQueue;

@@ -13,8 +13,7 @@
  *    limitations under the License.
  */
 
-#ifndef OPQUEUE_H_
-#define OPQUEUE_H_
+#pragma once
 
 #include <boost/lockfree/queue.hpp>
 #include "mongocxxdriver.h"
@@ -115,5 +114,3 @@ namespace cpp {
         };
     } /*namespace mtools*/
 } /* namespace cpp */
-
-#endif /* OPQUEUE_H_ */

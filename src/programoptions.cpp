@@ -47,7 +47,7 @@ namespace loader {
 //TODO: option to drop all indexes (i.e. even shard index) and then build afterward
 //TODO: option to discard_id (i.e. really fast right inserts on _id)
 //TODO: Sync delay, set on all replicas, then reset at end of load
-    void setProgramOptions(Settings &settings, int argc, char *argv[]) {
+    void setProgramOptions(Loader::Settings &settings, int argc, char *argv[]) {
         InitTarget initTarget;
         namespace po = boost::program_options;
         po::options_description generic("Generic");

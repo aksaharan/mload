@@ -13,8 +13,7 @@
  *    limitations under the License.
  */
 
-#ifndef FACTORY_H_
-#define FACTORY_H_
+#pragma once
 
 namespace cpp {
     /*
@@ -28,4 +27,3 @@ namespace cpp {
 
 } /* namespace cpp */
 
-#endif /* FACTORY_H_ */
