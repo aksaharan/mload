@@ -15,9 +15,9 @@
 
 #ifndef INPUTPROCESSOR_H_
 #define INPUTPROCESSOR_H_
+#include "inputaggregator.h"
 #include "inputformat.h"
 #include "mongocxxdriver.h"
-#include "inputqueue.h"
 
 namespace loader {
 
@@ -27,7 +27,7 @@ namespace loader {
      * This could change in the future but to keep lookups down it's probably better to
      * make sure that load segments are handed off by namespace if possible.
      */
-    class InputProcessor : public aggregator::LoadBuilder {
+    class InputProcessor : public aggregator::DocumentBuilder {
     public:
         InputProcessor(Loader *owner, std::string ns);
         ~InputProcessor() {
@@ -47,7 +47,7 @@ namespace loader {
     private:
         Loader *_owner;
         const std::string _ns;
-        aggregator::LoadQueueHolder _queue;
+        aggregator::InputAggregator _inputAggregator;
         cpp::LogicalLoc _docLogicalLoc;
         cpp::DocLoc _docLoc;
         std::string _docJson;

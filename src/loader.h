@@ -23,7 +23,6 @@
 #include "concurrentcontainer.h"
 #include "inputprocessor.h"
 #include "loaderdefs.h"
-#include "inputqueue.h"
 #include "mongoendpoint.h"
 #include "chunkdispatch.h"
 #include "tools.h"
@@ -97,7 +96,7 @@ namespace loader {
          * Returns the settings for loader queues.
          */
         const aggregator::Settings& queueSettings() const {
-            return _queueSettings;
+            return _settings.aggregatorSettings;
         }
 
         ~Loader() {
@@ -109,12 +108,11 @@ namespace loader {
 
         LoaderStats _stats;
         const Settings _settings;
-        aggregator::Settings _queueSettings;
         cpp::mtools::MongoCluster _mCluster;
         EndPointHolder _endPoints;
         dispatch::ChunkDispatcher _chunkDispatch;
 
-        std::deque<std::string> shardList;
+        std::deque<std::string> _shardList;
         size_t _ramMax;
         size_t _threadsMax;
         std::atomic<std::size_t> _processedFiles;

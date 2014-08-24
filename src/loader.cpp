@@ -37,7 +37,6 @@ namespace loader {
 
     Loader::Loader(Settings settings) :
             _settings(std::move(settings)),
-            _queueSettings(_settings.aggregatorSettings),
             _mCluster {_settings.connection},
             _endPoints(settings.endPointSettings, _mCluster),
             _chunkDispatch(_settings.dispatchSettings, _mCluster, &_endPoints, _settings.ns()),
@@ -46,7 +45,7 @@ namespace loader {
             _processedFiles {}
     {
         _writeOps = 0;
-        _mCluster.getShardList(&shardList);
+        _mCluster.getShardList(&_shardList);
     }
 
     void Loader::setEndPoints() {

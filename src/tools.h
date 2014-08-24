@@ -13,8 +13,7 @@
  *    limitations under the License.
  */
 
-#ifndef TOOLS_H_
-#define TOOLS_H_
+#pragma once
 
 #include <algorithm>
 #include <chrono>
@@ -220,5 +219,3 @@ namespace cpp {
         return std::unique_ptr<Tp>(new Tp(std::forward<Args>(args)...));
     }
 } /* namespace cpp */
-
-#endif /* TOOLS_H_ */

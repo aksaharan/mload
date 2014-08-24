@@ -13,11 +13,11 @@
  *    limitations under the License.
  */
 
-#include "inputqueue.h"
+#include "inputaggregator.h"
 
 namespace loader {
     namespace aggregator {
-        LoadQueue::LoadQueue(LoadQueueHolder *owner, Bson UBIndex) :
+        AbstractInputQueue::AbstractInputQueue(InputAggregator *owner, Bson UBIndex) :
                 _owner(owner),
                 _queueSize(_owner->settings().queueSize),
                 _opAgg(_owner->getOpAggForChunk(UBIndex)),
@@ -25,21 +25,21 @@ namespace loader {
         {
         }
 
-        void LoadQueueHolder::init(const cpp::mtools::MongoCluster::NameSpace &ns) {
+        void InputAggregator::init(const cpp::mtools::MongoCluster::NameSpace &ns) {
             std::unordered_map<cpp::mtools::MongoCluster::ShardName, size_t> shardChunkCounters;
             //Assumes that nsChunks is in sorted order, or the stage setup won't work right
             for (auto &iCm : _mCluster.nsChunks(ns)) {
-                _inputPlan.insertUnordered(std::get<0>(iCm), LoadQueuePointer {});
+                _inputPlan.insertUnordered(std::get<0>(iCm), AbstractInputQueuePointer {});
                 size_t depth = ++(shardChunkCounters[std::get<1>(iCm)->first]);
                 //TODO: change this to a factory that creates queues based on chunk depth in the shard
                 if (depth <= DIRECT_LOAD)
-                    _inputPlan.back() = DirectLoadQueue::create(this, std::get<0>(iCm));
+                    _inputPlan.back() = DirectQueue::create(this, std::get<0>(iCm));
                 else
-                    _inputPlan.back() = RAMLoadQueue::create(this, std::get<0>(iCm));
+                    _inputPlan.back() = RAMQueue::create(this, std::get<0>(iCm));
             }
         }
 
-        void LoadQueueHolder::clean() {
+        void InputAggregator::clean() {
             for (auto &i : _inputPlan)
                 i.second->clean();
         }
