@@ -22,7 +22,7 @@
 #include "mongocxxdriver.h"
 #include "mongocluster.h"
 #include "mongoendpointsettings.h"
-#include "opqueue.h"
+#include "mongooperations.h"
 #include "threading.h"
 
 namespace cpp {
