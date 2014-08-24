@@ -37,15 +37,15 @@ namespace cpp {
         template<typename TOpQueue = cpp::mtools::OpQueueNoLock>
         class BasicMongoEndPoint {
         public:
-            BasicMongoEndPoint( EndPointSettings settings, std::string connection ) :
-                    _threadPool( settings.threadCount ),
-                    _connection( std::move( connection ) ),
-                    _opQueue( settings.queueSize ),
-                    _sleepTime( settings.sleepTime ),
-                    _threadCount( settings.threadCount )
+            BasicMongoEndPoint(EndPointSettings settings, std::string connection) :
+                    _threadPool(settings.threadCount),
+                    _connection(std::move(connection)),
+                    _opQueue(settings.queueSize),
+                    _sleepTime(settings.sleepTime),
+                    _threadCount(settings.threadCount)
             {
-                assert( settings.threadCount );
-                if ( settings.startImmediate ) start();
+                assert(settings.threadCount);
+                if (settings.startImmediate) start();
             }
             ~BasicMongoEndPoint() {
                 shutdown();
@@ -70,9 +70,9 @@ namespace cpp {
              * It is desirable to delay this until there is data in the queue if the threads are spinning
              */
             void start() {
-                assert( !isRunning() );
-                for ( size_t i = 0; i < _threadCount; ++i )
-                    _threadPool.queue( [this] () {this->run();} );
+                assert(!isRunning());
+                for (size_t i = 0; i < _threadCount; ++i)
+                    _threadPool.queue([this] () {this->run();});
             }
 
             /**
@@ -108,9 +108,9 @@ namespace cpp {
             /**
              * Push onto the thread queue
              */
-            bool push( DbOpPointer dbOp ) {
+            bool push(DbOpPointer dbOp) {
                 //TODO: figure out error handling, or change function, problem is that the data is consumed even on false
-                assert( _opQueue.push( dbOp ) );
+                assert(_opQueue.push(dbOp));
                 return true;
             }
 
@@ -120,39 +120,39 @@ namespace cpp {
              */
             void run() {
                 DbOpPointer currentOp;
-                mongo::ScopedDbConnection conn( _connection );
+                mongo::ScopedDbConnection conn(_connection);
                 //Discount the first miss as the loop is probably starting dry
                 bool miss = false;
                 bool firstmiss = true;
-                size_t missCount { };
-                while ( !_threadPool.terminate() ) {
-                    if ( pop( currentOp ) ) {
-                        if ( miss ) {
+                size_t missCount {};
+                while (!_threadPool.terminate()) {
+                    if (pop(currentOp)) {
+                        if (miss) {
                             miss = false;
                             firstmiss = false;
                             std::cout << _connection << ": Hitting" << std::endl;
                         }
-                        currentOp->run( conn );
+                        currentOp->run(conn);
                     }
                     else {
-                        if ( _threadPool.endWait() ) break;
+                        if (_threadPool.endWait()) break;
                         //TODO: log levels.  If you are seeing misses std::cout is cheap
-                        if ( !miss && !firstmiss ) {
+                        if (!miss && !firstmiss) {
                             std::cout << _connection << ": Missing" << std::endl;
                         }
-                        std::this_thread::sleep_for( std::chrono::milliseconds( _sleepTime ) );
+                        std::this_thread::sleep_for(std::chrono::milliseconds(_sleepTime));
                         miss = true;
-                        if ( !firstmiss ) ++missCount;
+                        if (!firstmiss) ++missCount;
                     }
                 }
-                if ( missCount ) std::cout << "Endpoint misses: " << missCount << ".  Slept: "
-                                           << missCount * _sleepTime / 1000 << " seconds"
-                                           << std::endl;
+                if (missCount) std::cout << "Endpoint misses: " << missCount << ".  Slept: "
+                                         << missCount * _sleepTime / 1000 << " seconds"
+                                         << std::endl;
             }
 
         private:
-            bool pop( DbOpPointer &dbOp ) {
-                return _opQueue.pop( dbOp );
+            bool pop(DbOpPointer &dbOp) {
+                return _opQueue.pop(dbOp);
             }
 
             cpp::ThreadPool _threadPool;
@@ -174,41 +174,41 @@ namespace cpp {
             //Note that ShardName can also be a mongoS, but in that case it doesn't much matter
             using MongoEndPointMap = std::unordered_map<cpp::mtools::MongoCluster::ShardName, MongoEndPointPtr>;
 
-            MongoEndPointHolder( EndPointSettings settings, MongoCluster &mCluster ) :
-                    _started( false )
+            MongoEndPointHolder(EndPointSettings settings, MongoCluster &mCluster) :
+                    _started( false)
             {
-                if ( settings.directLoad ) {
-                    for ( auto &shard : mCluster.shards() )
-                        _epm.emplace( std::make_pair( shard.first,
-                                                      MongoEndPointPtr( new MongoEndPoint {
-                                                              settings, shard.second } ) ) );
+                if (settings.directLoad) {
+                    for (auto &shard : mCluster.shards())
+                        _epm.emplace(std::make_pair(shard.first,
+                                                    MongoEndPointPtr(new MongoEndPoint {settings,
+                                                                                        shard.second})));
                 }
                 else {
-                    for ( auto &mongoS : mCluster.mongos() )
-                        _epm.emplace( std::make_pair( mongoS, MongoEndPointPtr( new MongoEndPoint {
-                                settings, mongoS } ) ) );
+                    for (auto &mongoS : mCluster.mongos())
+                        _epm.emplace(std::make_pair(mongoS, MongoEndPointPtr(new MongoEndPoint {
+                                settings, mongoS})));
                 }
-                assert( _epm.size() );
+                assert(_epm.size());
                 //We like to start with edge cases
                 _cycleItr = _epm.begin();
-                if ( settings.startImmediate ) start();
+                if (settings.startImmediate) start();
             }
 
             /**
              * @return MongoEndPoint for a specific shard/mongoS (though shouldn't need to be called
              * in the mongoS case)
              */
-            MongoEndPoint* at( const cpp::mtools::MongoCluster::ShardName &shard ) {
-                return _epm.at( shard ).get();
+            MongoEndPoint* at(const cpp::mtools::MongoCluster::ShardName &shard) {
+                return _epm.at(shard).get();
             }
 
             /**
              * Hand out end points in a round robin, use for mongoS
              */
             MongoEndPoint* getMongoSCycle() {
-                cpp::MutexLockGuard lock( _cycleMutex );
+                cpp::MutexLockGuard lock(_cycleMutex);
                 ++_cycleItr;
-                if ( _cycleItr == _epm.end() ) _cycleItr = _epm.begin();
+                if (_cycleItr == _epm.end()) _cycleItr = _epm.begin();
                 return _cycleItr->second.get();
             }
 
@@ -225,7 +225,7 @@ namespace cpp {
              */
             void start() {
                 _started = true;
-                for ( auto &i : _epm )
+                for (auto &i : _epm)
                     i.second->start();
             }
 
@@ -233,7 +233,7 @@ namespace cpp {
              * Have all of the end points shutdown when their queues are cleared, join those threads.
              */
             void gracefulShutdownJoin() {
-                for ( auto &ep : _epm )
+                for (auto &ep : _epm)
                     ep.second->gracefulShutdownJoin();
             }
 

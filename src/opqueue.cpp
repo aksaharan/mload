@@ -20,35 +20,35 @@ namespace cpp {
         OpQueueNoLock::~OpQueueNoLock() {
             //defensive: clear the queue so that pointers are deleted
             DbOpPointer dbOp;
-            while ( pop( dbOp ) )
+            while (pop(dbOp))
                 ;
         }
 
         namespace {
             //TODO: change error code impl to inspect and handle different codes
-            OpReturnCode CheckConnError( Connection &conn ) {
+            OpReturnCode CheckConnError(Connection &conn) {
                 //TODO: bson::bo le = GetLastErrorDetailed
                 std::string error = conn->getLastError();
-                if ( !error.empty() ) {
+                if (!error.empty()) {
                     std::cerr << error << std::endl;
-                    throw std::logic_error( "Write failed" );
+                    throw std::logic_error("Write failed");
                 }
                 return true;
             }
         }
 
-        OpQueueBulkInsertUnordered::OpQueueBulkInsertUnordered( std::string ns,
-                                              DataQueue *data,
-                                              int flags,
-                                              const WriteConcern *wc ) :
-                _ns( std::move( ns ) ), _data( std::move( *data ) ), _flags( flags ), _wc( wc )
+        OpQueueBulkInsertUnordered::OpQueueBulkInsertUnordered(std::string ns,
+                                                               DataQueue *data,
+                                                               int flags,
+                                                               const WriteConcern *wc) :
+                _ns(std::move(ns)), _data(std::move(*data)), _flags(flags), _wc(wc)
         {
         }
 
-        OpReturnCode OpQueueBulkInsertUnordered::run( Connection &conn ) {
-            conn->insert( _ns, _data, _flags, _wc );
-            if ( !_wc || !_wc->requiresConfirmation() ) return true;
-            return CheckConnError( conn );
+        OpReturnCode OpQueueBulkInsertUnordered::run(Connection &conn) {
+            conn->insert(_ns, _data, _flags, _wc);
+            if (!_wc || !_wc->requiresConfirmation()) return true;
+            return CheckConnError(conn);
         }
     }
 } /* namespace tools */

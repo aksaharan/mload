@@ -13,8 +13,7 @@
  *    limitations under the License.
  */
 
-#ifndef OPAGGREGATOR_H_
-#define OPAGGREGATOR_H_
+#pragma once
 
 #include <fstream>
 #include <memory>
@@ -25,37 +24,34 @@
 #include "loaderendpoint.h"
 
 namespace loader {
-    namespace opagg {
-        class OpAggregatorHolder;
+    namespace dispatch {
+        class ChunkDispatcher;
 
         /**
-         * Settings for an individual OpAggregator, should only be needed by the holder.
-         */
-        struct OpSettings {
-            OpAggregatorHolder *owner;
-            EndPointHolder *eph;
-            Bson chunkUB;
-        };
-
-        /**
-         * Public interface for the OpAggregators.
+         * Public interface for the AbstractChunkDispatchs.
          * Locking can be used.  Containers should push operations in batches.
          */
-        class OpAggregator {
+        class AbstractChunkDispatch {
         public:
-            OpAggregator( OpSettings settings );
-            virtual ~OpAggregator() {
+            struct Settings {
+                ChunkDispatcher *owner;
+                EndPointHolder *eph;
+                Bson chunkUB;
+            };
+
+            AbstractChunkDispatch(Settings settings);
+            virtual ~AbstractChunkDispatch() {
             }
 
             /**
              * Sends data to the aggregator from the simple queue
              */
-            virtual void push( BsonV *q ) = 0;
+            virtual void push(BsonV *q) = 0;
 
             /**
              * Sends data to the aggregator from the simple queue
              */
-            virtual void pushSort( BsonPairDeque *q ) = 0;
+            virtual void pushSort(BsonPairDeque *q) = 0;
 
             /**
              * Called after any new input is over
@@ -77,14 +73,14 @@ namespace loader {
             /**
              * @return the holder for the derived class to use
              */
-            OpAggregatorHolder* owner() {
+            ChunkDispatcher* owner() {
                 return _settings.owner;
             }
 
             /**
              * @return settings for the derived class to use
              */
-            const OpSettings& settings() const {
+            const Settings& settings() const {
                 return _settings;
             }
 
@@ -92,51 +88,51 @@ namespace loader {
             /**
              * Derived classes call this to unload their queues in batches
              */
-            void send( cpp::mtools::DataQueue *q );
+            void send(cpp::mtools::DataQueue *q);
 
         private:
-            OpSettings _settings;
+            Settings _settings;
             EndPoint *_ep;
         };
 
-        using OpAggPointer = std::unique_ptr<OpAggregator>;
+        using ChunkDispatchPointer = std::unique_ptr<AbstractChunkDispatch>;
 
         /**
-         * Holds OpAggregators for a namespace
+         * Holds AbstractChunkDispatchs for a namespace
          */
-        class OpAggregatorHolder {
+        class ChunkDispatcher {
         public:
-            using OrderedWaterFall = std::deque<OpAggregator*>;
+            using OrderedWaterFall = std::deque<AbstractChunkDispatch*>;
             using Key = cpp::mtools::MongoCluster::ChunkIndexKey;
-            using Value = OpAggPointer;
+            using Value = ChunkDispatchPointer;
             using LoadPlan = cpp::Index<Key, Value, cpp::BSONObjCmp>;
-            OpAggregatorHolder( opagg::Settings settings,
-                                cpp::mtools::MongoCluster &mCluster,
-                                EndPointHolder *eph,
-                                cpp::mtools::MongoCluster::NameSpace ns );
+            ChunkDispatcher(dispatch::Settings settings,
+                               cpp::mtools::MongoCluster &mCluster,
+                               EndPointHolder *eph,
+                               cpp::mtools::MongoCluster::NameSpace ns);
 
-            ~OpAggregatorHolder() {
+            ~ChunkDispatcher() {
                 _tp.terminateInitiate();
                 _tp.joinAll();
             }
 
-            Value& at( const Key &key ) {
-                return _loadPlan.at( key );
+            Value& at(const Key &key) {
+                return _loadPlan.at(key);
             }
 
             const cpp::mtools::MongoCluster::NameSpace& ns() const {
                 return _ns;
             }
 
-            cpp::mtools::MongoCluster::ShardName getShardForChunk( Key &key ) {
-                return _mCluster.getShardForChunk( ns(), key );
+            cpp::mtools::MongoCluster::ShardName getShardForChunk(Key &key) {
+                return _mCluster.getShardForChunk(ns(), key);
             }
 
             /**
-             * @return the OpAggregator for a chunk in this namespace
+             * @return the AbstractChunkDispatch for a chunk in this namespace
              */
-            OpAggregator* getOpAggForChunk( Key &key ) {
-                return _loadPlan.at( key ).get();
+            AbstractChunkDispatch* getOpAggForChunk(Key &key) {
+                return _loadPlan.at(key).get();
             }
 
             /**
@@ -150,8 +146,8 @@ namespace loader {
             /**
              * @return EndPoint for a specific chunk's max key
              */
-            EndPoint* getEndPointForChunk( Key &key ) {
-                return _eph->at( getShardForChunk( key ) );
+            EndPoint* getEndPointForChunk(Key &key) {
+                return _eph->at(getShardForChunk(key));
             }
 
             /*
@@ -194,14 +190,14 @@ namespace loader {
              * Queues a task in the thread pool associated with this queue
              * Will be used for disk queues
              */
-            void queueTask( cpp::ThreadFunction func ) {
-                _tp.queue( func );
+            void queueTask(cpp::ThreadFunction func) {
+                _tp.queue(func);
             }
 
         private:
             void init();
 
-            opagg::Settings _settings;
+            dispatch::Settings _settings;
             //The thread pool is only used with disk sorting
             cpp::ThreadPool _tp;
             cpp::mtools::MongoCluster &_mCluster;
@@ -212,32 +208,32 @@ namespace loader {
 
         };
 
-        inline void OpAggregator::send( cpp::mtools::DataQueue *q ) {
-            endPoint()->push( cpp::mtools::OpQueueBulkInsertUnordered::make( owner()->ns(),
-                                                                    q,
-                                                                    0,
-                                                                    owner()->writeConcern() ) );
+        inline void AbstractChunkDispatch::send(cpp::mtools::DataQueue *q) {
+            endPoint()->push(cpp::mtools::OpQueueBulkInsertUnordered::make(owner()->ns(),
+                                                                           q,
+                                                                           0,
+                                                                           owner()->writeConcern()));
         }
 
         /**
-         * This OpAggregator by passes queueing at this stage and send the load directly to the
+         * This AbstractChunkDispatch by passes queueing at this stage and send the load directly to the
          * end point.
          */
-        class BypassOpAgg : public OpAggregator {
+        class ImmediateDispatch : public AbstractChunkDispatch {
         public:
-            BypassOpAgg( OpSettings settings ) :
-                    OpAggregator( std::move( settings ) )
+            ImmediateDispatch(Settings settings) :
+                    AbstractChunkDispatch(std::move(settings))
             {
             }
 
-            void push( BsonV *q ) {
-                send( q );
+            void push(BsonV *q) {
+                send(q);
                 //TODO: remove this check
-                assert( q->empty() );
+                assert(q->empty());
             }
 
-            void pushSort( BsonPairDeque *q ) {
-                assert( false );
+            void pushSort(BsonPairDeque *q) {
+                assert(false);
             }
 
             /*
@@ -249,45 +245,41 @@ namespace loader {
             void doLoad() {
             }
 
-            static OpAggPointer create( OpAggregatorHolder *owner,
-                                        EndPointHolder *eph,
-                                        Bson chunkUB )
+            static ChunkDispatchPointer create(ChunkDispatcher *owner, EndPointHolder *eph, Bson chunkUB)
             {
-                return OpAggPointer( new BypassOpAgg( OpSettings { owner, eph, chunkUB } ) );
+                return ChunkDispatchPointer(new ImmediateDispatch(Settings {owner, eph, chunkUB}));
             }
         };
 
         /**
          * Stores the data in RAM until it is time to push.  At which point is sorts it and sends it.
          */
-        class RAMQueueOpAgg : public OpAggregator {
+        class RAMQueueDispatch : public AbstractChunkDispatch {
         public:
-            RAMQueueOpAgg( OpSettings settings ) :
-                    OpAggregator( std::move( settings ) )
+            RAMQueueDispatch(Settings settings) :
+                    AbstractChunkDispatch(std::move(settings))
             {
             }
 
-            void push( BsonV *q ) {
-                assert( false );
+            void push(BsonV *q) {
+                assert(false);
             }
 
-            void pushSort( BsonPairDeque *q ) {
+            void pushSort(BsonPairDeque *q) {
                 //TODO: see if pre sorting is faster
-                _queue.moveIn( q );
+                _queue.moveIn(q);
                 q->clear();
             }
 
             void prep() {
-                _queue.sort( Compare( cpp::BSONObjCmp( owner()->sortIndex() ) ) );
+                _queue.sort(Compare(cpp::BSONObjCmp(owner()->sortIndex())));
             }
 
             void doLoad();
 
-            static OpAggPointer create( OpAggregatorHolder *owner,
-                                        EndPointHolder *eph,
-                                        Bson chunkUB )
+            static ChunkDispatchPointer create(ChunkDispatcher *owner, EndPointHolder *eph, Bson chunkUB)
             {
-                return OpAggPointer( new RAMQueueOpAgg( OpSettings { owner, eph, chunkUB } ) );
+                return ChunkDispatchPointer(new RAMQueueDispatch(Settings {owner, eph, chunkUB}));
             }
 
         private:
@@ -298,46 +290,44 @@ namespace loader {
         };
 
         //TODO: DiskQueue OpAgg, cycle sort?
-        class DiskQueueOpAgg : public OpAggregator {
+        class DiskQueueDispatch : public AbstractChunkDispatch {
         public:
-            DiskQueueOpAgg( OpSettings settings ) :
-                    OpAggregator( std::move( settings ) )
+            DiskQueueDispatch(Settings settings) :
+                    AbstractChunkDispatch(std::move(settings))
             {
-                assert( false );
-                diskQueue.open( owner()->workPath() + "chunk" + this->settings().chunkUB.toString()
-                    + ".bson" );
+                assert(false);
+                diskQueue.open(owner()->workPath() + "chunk" + this->settings().chunkUB.toString()
+                    + ".bson");
             }
 
-            void push( BsonV *q ) {
-                _holder.push( std::move( *q ) );
-                owner()->queueTask( [this] {this->spill();} );
+            void push(BsonV *q) {
+                _holder.push(std::move(*q));
+                owner()->queueTask([this] {this->spill();});
             }
 
-            void pushSort( BsonPairDeque *q ) {
-                assert( false );
+            void pushSort(BsonPairDeque *q) {
+                assert(false);
             }
 
             void prep() {
                 //needs to work
-                assert( false );
+                assert(false);
             }
 
             void doLoad() {
                 //needs to work
-                assert( false );
+                assert(false);
             }
 
-            static OpAggPointer create( OpAggregatorHolder *owner,
-                                        EndPointHolder *eph,
-                                        Bson chunkUB )
+            static ChunkDispatchPointer create(ChunkDispatcher *owner, EndPointHolder *eph, Bson chunkUB)
             {
-                return OpAggPointer( new DiskQueueOpAgg( OpSettings { owner, eph, chunkUB } ) );
+                return ChunkDispatchPointer(new DiskQueueDispatch(Settings {owner, eph, chunkUB}));
             }
 
         protected:
             void spill() {
                 BsonV save;
-                while ( _holder.pop( save ) ) {
+                while (_holder.pop(save)) {
 
                 }
 
@@ -351,4 +341,3 @@ namespace loader {
     }
 } /* namespace loader */
 
-#endif /* OPAGGREGATOR_H_ */

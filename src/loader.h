@@ -23,9 +23,9 @@
 #include "concurrentcontainer.h"
 #include "inputprocessor.h"
 #include "loaderdefs.h"
-#include "loadqueue.h"
+#include "inputqueue.h"
 #include "mongoendpoint.h"
-#include "opaggregator.h"
+#include "chunkdispatch.h"
 #include "tools.h"
 #include "threading.h"
 
@@ -57,7 +57,7 @@ namespace loader {
 
         };
 
-        explicit Loader( Settings settings );
+        explicit Loader(Settings settings);
 
         /**
          * Gets stats
@@ -77,8 +77,8 @@ namespace loader {
         /**
          * Returns the opAggregator queues
          */
-        opagg::OpAggregatorHolder& opAgg() {
-            return _opAgg;
+        dispatch::ChunkDispatcher& opAgg() {
+            return _opDispatch;
         }
 
         /**
@@ -112,7 +112,7 @@ namespace loader {
         queue::Settings _queueSettings;
         cpp::mtools::MongoCluster _mCluster;
         EndPointHolder _endPoints;
-        opagg::OpAggregatorHolder _opAgg;
+        dispatch::ChunkDispatcher _opDispatch;
 
         std::deque<std::string> shardList;
         size_t _ramMax;
@@ -121,7 +121,7 @@ namespace loader {
         std::atomic<unsigned long long> _writeOps;
         FileQueue _fileQueue;
         cpp::LocSegMapping _locSegMapping;
-        opagg::OpAggregatorHolder::OrderedWaterFall _wf;
+        dispatch::ChunkDispatcher::OrderedWaterFall _wf;
         cpp::Mutex _prepSetMutex;
 
         bool enabledEndPoints() {
@@ -150,13 +150,13 @@ namespace loader {
          * Get the next chunk to notify of input file completion in shard chunk order.
          * Thread safe
          */
-        opagg::OpAggregator* getNextPrep();
+        dispatch::AbstractChunkDispatch* getNextPrep();
 
         /**
          * Resolves a connection for a shard
          */
-        const std::string& getConn( const std::string &shard ) {
-            return this->_mCluster.getConn( shard );
+        const std::string& getConn(const std::string &shard) {
+            return this->_mCluster.getConn(shard);
         }
     };
 } //namespace loader

@@ -39,8 +39,8 @@ namespace cpp {
      */
     class ThreadPoolWorker {
     public:
-        ThreadPoolWorker( ThreadPool &pool ) :
-                _pool( pool )
+        ThreadPoolWorker(ThreadPool &pool) :
+                _pool(pool)
         {
         }
 
@@ -58,18 +58,18 @@ namespace cpp {
      */
     class ThreadPool {
     public:
-        ThreadPool( size_t size ) :
-                _terminate( false ), _endWait( false )
+        ThreadPool(size_t size) :
+                _terminate( false), _endWait( false)
         {
             do {
-                _threads.push_back( std::thread( ThreadPoolWorker( *this ) ) );
+                _threads.push_back(std::thread(ThreadPoolWorker(*this)));
             }
-            while ( --size );
+            while (--size);
         }
         ~ThreadPool() {
             //If the pool ended with endwait all work should be complete
             //This can be broken if something is still inserting, this will just "warn" of that
-            if(_endWait && !_terminate) assert(!size());
+            if (_endWait && !_terminate) assert(!size());
             _terminate = true;
             _workNotify.notify_all();
             joinAll();
@@ -79,9 +79,9 @@ namespace cpp {
         /**
          * Enqueus a work function
          */
-        void queue( ThreadFunction func ) {
-            MutexLockGuard lock( _workMutex );
-            _workQueue.push_back( func );
+        void queue(ThreadFunction func) {
+            MutexLockGuard lock(_workMutex);
+            _workQueue.push_back(func);
             _workNotify.notify_one();
         }
 
@@ -89,8 +89,8 @@ namespace cpp {
          * Joins all threads.  Does NOT stop them.
          */
         void joinAll() {
-            for ( auto &thread : _threads )
-                if ( thread.joinable() ) thread.join();
+            for (auto &thread : _threads)
+                if (thread.joinable()) thread.join();
         }
 
         /**
@@ -128,7 +128,7 @@ namespace cpp {
          * @return the size of the workQueue.
          */
         size_t size() const {
-            MutexLockGuard lock( _workMutex );
+            MutexLockGuard lock(_workMutex);
             return _workQueue.size();
         }
 
@@ -159,14 +159,14 @@ namespace cpp {
         using Value = T;
 
         template<typename ... Args>
-        RoundRobin( Args ...args ) :
-                _container( args... )
+        RoundRobin(Args ...args) :
+                _container(args...)
         {
             init();
         }
 
-        RoundRobin( Container &&container ) :
-                _container( std::forward<Container>( container ) )
+        RoundRobin(Container &&container) :
+                _container(std::forward<Container>(container))
         {
             init();
         }
@@ -175,11 +175,11 @@ namespace cpp {
          * Places the next value into the passed pointer
          * @return true if there is a value, false if empty
          */
-        bool next( Value *ret ) const {
-            cpp::MutexLockGuard lock( _mutex );
+        bool next(Value *ret) const {
+            cpp::MutexLockGuard lock(_mutex);
 
-            if ( _container.empty() ) return false;
-            if ( ++_position == _container.end() ) _position = _container.begin();
+            if (_container.empty()) return false;
+            if (++_position == _container.end()) _position = _container.begin();
             *ret = *_position;
             return true;
         }
@@ -188,10 +188,10 @@ namespace cpp {
          * Removes all instances of the value if it exists in the RR
          */
         //TODO: Make this more robust, i.e. dump init
-        void remove( const Value& value ) {
-            cpp::MutexLockGuard lock( _mutex );
-            _container.erase( std::remove( _container.begin(), _container.end(), value ),
-                              _container.end() );
+        void remove(const Value& value) {
+            cpp::MutexLockGuard lock(_mutex);
+            _container.erase(std::remove(_container.begin(), _container.end(), value),
+                             _container.end());
             init();
         }
 

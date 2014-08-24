@@ -17,7 +17,7 @@
 #define INPUTPROCESSOR_H_
 #include "inputformat.h"
 #include "mongocxxdriver.h"
-#include "loadqueue.h"
+#include "inputqueue.h"
 
 namespace loader {
 
@@ -29,7 +29,7 @@ namespace loader {
      */
     class InputProcessor : public queue::LoadBuilder {
     public:
-        InputProcessor( Loader *owner, std::string ns );
+        InputProcessor(Loader *owner, std::string ns);
         ~InputProcessor() {
         }
 
@@ -37,7 +37,7 @@ namespace loader {
          * Takes a segment and it's logical location (i.e. the mapping to something real)
          * It then puts all the documents into the right queues
          */
-        void processSegmentToQueue( const cpp::LocSegment &segment, cpp::LogicalLoc logicalLoc );
+        void processSegmentToAggregator(const cpp::LocSegment &segment, cpp::LogicalLoc logicalLoc);
 
         virtual Bson getFinalDoc();
         virtual Bson getIndex();
@@ -53,7 +53,7 @@ namespace loader {
         std::string _docJson;
         Bson _doc;
         mongo::BSONObjBuilder *_extra = NULL;
-        Bson _docShardKey;bool _added_id { };
+        Bson _docShardKey;bool _added_id {};
         std::unique_ptr<InputFormat> _input;
 
     };

@@ -22,7 +22,7 @@
 
 #include "index.h"
 
-int main( int argc, char* argv[] ) {
+int main(int argc, char* argv[]) {
     cpp::SimpleTimer<> totalTimer;
     totalTimer.start();
     //C++ Driver
@@ -33,10 +33,10 @@ int main( int argc, char* argv[] ) {
 
     //Program beings: read settings, then hand those settings off to the loader.
     loader::Settings settings;
-    loader::setProgramOptions( settings, argc, argv );
+    loader::setProgramOptions(settings, argc, argv);
 
     //C++ driver, remove the cdriver requirements.
-    settings.connection = settings.connection.substr( std::string( "mongodb://" ).size() );
+    settings.connection = settings.connection.substr(std::string("mongodb://").size());
 
     std::cout << "init finished" << std::endl;
 
@@ -46,7 +46,7 @@ int main( int argc, char* argv[] ) {
     timerLoad.start();
 
     //The actual loading
-    loader::Loader loader( settings );
+    loader::Loader loader(settings);
     loader.run();
 
     //End all timers
@@ -57,7 +57,6 @@ int main( int argc, char* argv[] ) {
     long loadSeconds = timerLoad.seconds();
 
     std::cout << "\nTotal time: " << totalSeconds / 60 << "m" << totalSeconds % 60 << "s"
-              << "\nLoad time: " << loadSeconds / 60 << "m" << loadSeconds % 60 << "s"
-              << std::endl;
+              << "\nLoad time: " << loadSeconds / 60 << "m" << loadSeconds % 60 << "s" << std::endl;
 
 }

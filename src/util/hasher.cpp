@@ -36,50 +36,49 @@
 
 namespace mongo {
 
-    Hasher::Hasher( HashSeed seed ) :
-            _seed( seed )
+    Hasher::Hasher(HashSeed seed) :
+            _seed(seed)
     {
-        md5_init( &_md5State );
-        md5_append( &_md5State, reinterpret_cast<const md5_byte_t *>( &_seed ), sizeof( _seed ) );
+        md5_init(&_md5State);
+        md5_append(&_md5State, reinterpret_cast<const md5_byte_t *>(&_seed), sizeof(_seed));
     }
 
-    void Hasher::addData( const void * keyData, size_t numBytes ) {
-        md5_append( &_md5State, static_cast<const md5_byte_t *>( keyData ), numBytes );
+    void Hasher::addData(const void * keyData, size_t numBytes) {
+        md5_append(&_md5State, static_cast<const md5_byte_t *>(keyData), numBytes);
     }
 
-    void Hasher::finish( HashDigest out ) {
-        md5_finish( &_md5State, out );
+    void Hasher::finish(HashDigest out) {
+        md5_finish(&_md5State, out);
     }
 
-    long long int BSONElementHasher::hash64( const BSONElement& e, HashSeed seed ) {
-        std::unique_ptr<Hasher> h( HasherFactory::createHasher( seed ) );
-        recursiveHash( h.get(), e, false );
+    long long int BSONElementHasher::hash64(const BSONElement& e, HashSeed seed) {
+        std::unique_ptr<Hasher> h(HasherFactory::createHasher(seed));
+        recursiveHash(h.get(), e, false);
         HashDigest d;
-        h->finish( d );
+        h->finish(d);
         //HashDigest is actually 16 bytes, but we just get 8 via truncation
         // NOTE: assumes little-endian
-        return *reinterpret_cast<long long int *>( d );
+        return *reinterpret_cast<long long int *>(d);
     }
 
-    void BSONElementHasher::recursiveHash( Hasher* h, const BSONElement& e, bool includeFieldName )
-    {
+    void BSONElementHasher::recursiveHash(Hasher* h, const BSONElement& e, bool includeFieldName) {
 
         int canonicalType = e.canonicalType();
-        h->addData( &canonicalType, sizeof( canonicalType ) );
+        h->addData(&canonicalType, sizeof(canonicalType));
 
-        if ( includeFieldName ) {
-            h->addData( e.fieldName(), e.fieldNameSize() );
+        if (includeFieldName) {
+            h->addData(e.fieldName(), e.fieldNameSize());
         }
 
-        if ( !e.mayEncapsulate() ) {
+        if (!e.mayEncapsulate()) {
             //if there are no embedded objects (subobjects or arrays),
             //compute the hash, squashing numeric types to 64-bit ints
-            if ( e.isNumber() ) {
+            if (e.isNumber()) {
                 long long int i = e.safeNumberLong(); //well-defined for troublesome doubles
-                h->addData( &i, sizeof( i ) );
+                h->addData(&i, sizeof(i));
             }
             else {
-                h->addData( e.value(), e.valuesize() );
+                h->addData(e.value(), e.valuesize());
             }
         }
         else {
@@ -88,17 +87,17 @@ namespace mongo {
             //then each sub-element
             //then finish with the EOO element.
             BSONObj b;
-            if ( e.type() == CodeWScope ) {
-                h->addData( e.codeWScopeCode(), e.codeWScopeCodeLen() );
+            if (e.type() == CodeWScope) {
+                h->addData(e.codeWScopeCode(), e.codeWScopeCodeLen());
                 b = e.codeWScopeObject();
             }
             else {
                 b = e.embeddedObject();
             }
-            BSONObjIterator i( b );
-            while ( i.moreWithEOO() ) {
+            BSONObjIterator i(b);
+            while (i.moreWithEOO()) {
                 BSONElement el = i.next();
-                recursiveHash( h, el, true );
+                recursiveHash(h, el, true);
             }
         }
     }
@@ -106,8 +105,8 @@ namespace mongo {
     struct HasherUnitTest {
         void run() {
             // Hard-coded check to ensure the hash function is consistent across platforms
-            BSONObj o = BSON( "check" << 42 );
-            assert( BSONElementHasher::hash64( o.firstElement(), 0 ) == -944302157085130861LL );
+            BSONObj o = BSON("check" << 42);
+            assert(BSONElementHasher::hash64(o.firstElement(), 0) == -944302157085130861LL);
         }
     } hasherUnitTest;
 }

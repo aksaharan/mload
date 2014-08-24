@@ -29,30 +29,30 @@ namespace cpp {
      */
     template<typename Cmp, typename Key>
     struct IndexPairCompare {
-        IndexPairCompare( Cmp cmp ) :
-                compare( std::move( cmp ) )
+        IndexPairCompare(Cmp cmp) :
+                compare(std::move(cmp))
         {
         }
 
         template<typename IndexDataType>
-        bool operator()( const IndexDataType &l, const IndexDataType &r ) const {
+        bool operator()(const IndexDataType &l, const IndexDataType &r) const {
             static_assert(std::is_same<typename IndexDataType::first_type, Key>::value, "Need to have the same key types to compare");
-            return compare( l.first, r.first );
+            return compare(l.first, r.first);
         }
 
         template<typename IndexDataType>
-        bool operator()( const Key &l, const IndexDataType &r ) const {
+        bool operator()(const Key &l, const IndexDataType &r) const {
             static_assert(std::is_same<typename IndexDataType::first_type, Key>::value, "Need to have the same key types to compare");
-            return compare( l, r.first );
+            return compare(l, r.first);
         }
 
         template<typename IndexDataType>
-        bool operator()( const IndexDataType &l, const Key &r ) const {
+        bool operator()(const IndexDataType &l, const Key &r) const {
             static_assert(std::is_same<typename IndexDataType::first_type, Key>::value, "Need to have the same key types to compare");
-            return compare( l.first, r );
+            return compare(l.first, r);
         }
 
-        friend std::ostream& operator<<( std::ostream &o, const IndexPairCompare &c ) {
+        friend std::ostream& operator<<(std::ostream &o, const IndexPairCompare &c) {
             o << c.compare;
             return o;
         }
@@ -80,26 +80,26 @@ namespace cpp {
         using const_iterator = typename Container::const_iterator;
         using CompareHolder = IndexPairCompare<Compare, Key>;
 
-        BasicIndex( BasicIndex &&rhs ) :
-                _compare( std::move( rhs._compare ) ), _container( std::move( rhs._container ) )
+        BasicIndex(BasicIndex &&rhs) :
+                _compare(std::move(rhs._compare)), _container(std::move(rhs._container))
         {
         }
         template<typename ...Args>
-        BasicIndex( const BasicIndex &bi, Args&&... args ) :
-                _compare( CompareHolder( Cmp( std::forward<Args>(args)... ) ) ), _container( bi )
+        BasicIndex(const BasicIndex &bi, Args&&... args) :
+                _compare(CompareHolder(Cmp(std::forward<Args>(args)...))), _container(bi)
         {
         }
         template<typename ...Args>
-        BasicIndex( Args ... args ) :
-                _compare( CompareHolder( Compare( args... ) ) )
+        BasicIndex(Args ... args) :
+                _compare(CompareHolder(Compare(args...)))
         {
         }
-        explicit BasicIndex( Compare compare ) :
-                _compare( CompareHolder( std::move( compare ) ) )
+        explicit BasicIndex(Compare compare) :
+                _compare(CompareHolder(std::move(compare)))
         {
         }
 
-        friend std::ostream& operator<<( std::ostream &o, const BasicIndex::iterator &i ) {
+        friend std::ostream& operator<<(std::ostream &o, const BasicIndex::iterator &i) {
             o << i->first << "::" << i->second;
             return o;
         }
@@ -126,7 +126,7 @@ namespace cpp {
             _container.clear();
         }
         void sort() {
-            std::sort( _container.begin(), _container.end(), _compare );
+            std::sort(_container.begin(), _container.end(), _compare);
         }
         size_t size() const {
             return _container.size();
@@ -143,24 +143,24 @@ namespace cpp {
         /**
          * Moves into the container in an unordered fashion, must be sorted afterward if desired
          */
-        void insertUnordered( Key index, Value value ) {
-            _container.emplace_back( std::make_pair( std::move( index ), std::move( value ) ) );
+        void insertUnordered(Key index, Value value) {
+            _container.emplace_back(std::make_pair(std::move(index), std::move(value)));
         }
 
         /**
          * Moves a range into the container in an unordered fashion, must be sorted afterward if desired
          */
         template<typename InputIterator>
-        void insertUnordered( InputIterator first, InputIterator last ) {
+        void insertUnordered(InputIterator first, InputIterator last) {
             static_assert(std::is_constructible<typename std::iterator_traits<InputIterator>::value_type, Data>::value, "Cannot construct insert type");
-            _container.insert( end(), first, last );
+            _container.insert(end(), first, last);
         }
 
         /**
          * Moves from the given index to this one.
          */
-        void steal( BasicIndex &takeFrom ) {
-            insertUnordered( takeFrom.begin(), takeFrom.end() );
+        void steal(BasicIndex &takeFrom) {
+            insertUnordered(takeFrom.begin(), takeFrom.end());
             takeFrom.clear();
         }
 
@@ -174,10 +174,10 @@ namespace cpp {
         /**
          * Assumes that a sort has taken place
          */
-        iterator find( const Key &key ) {
-            auto i = std::lower_bound( begin(), end(), key, _compare );
+        iterator find(const Key &key) {
+            auto i = std::lower_bound(begin(), end(), key, _compare);
             //TODO: remove assert, right now it's here because this should never be true
-            assert( i->first == key );
+            assert(i->first == key);
             //Ensure positive infinity returns the correct result
             return i;
 
@@ -186,9 +186,9 @@ namespace cpp {
         /**
          * Assumes that a sort has taken place
          */
-        Value& at( const Key &key ) {
-            auto i = find( key );
-            if ( i == end() ) throw std::range_error( "Index out of bounds" );
+        Value& at(const Key &key) {
+            auto i = find(key);
+            if (i == end()) throw std::range_error("Index out of bounds");
             return i->second;
         }
 
@@ -200,31 +200,31 @@ namespace cpp {
          * Assumes sort has taken place
          * Assumes upper bounded includes infinity, so nothing is ever returned at end.
          */
-        Value& upperBoundSafe( const Key &key ) {
-            auto i = std::upper_bound( begin(), end(), key, _compare );
+        Value& upperBoundSafe(const Key &key) {
+            auto i = std::upper_bound(begin(), end(), key, _compare);
             //Ensure positive infinity returns the correct result
-            if ( i == _container.end() ) --i;
+            if (i == _container.end()) --i;
             return i->second;
         }
 
         /**
          * Assumes that a sort has taken place
          */
-        Value& upperBound( const Key &key ) {
-            auto i = std::upper_bound( begin(), end(), key, _compare );
+        Value& upperBound(const Key &key) {
+            auto i = std::upper_bound(begin(), end(), key, _compare);
             return i->second;
         }
 
         /**
          * Assumes that a sort has taken place
          */
-        Value& lowerBound( const Key &key ) {
-            auto i = std::lower_bound( begin(), end(), key, _compare );
+        Value& lowerBound(const Key &key) {
+            auto i = std::lower_bound(begin(), end(), key, _compare);
             return i->second;
         }
 
-        friend std::ostream& operator<<( std::ostream & o, const BasicIndex &rhs ) {
-            for ( auto &i : rhs._container ) {
+        friend std::ostream& operator<<(std::ostream & o, const BasicIndex &rhs) {
+            for (auto &i : rhs._container) {
                 o << i->first << "\n";
             }
             return o;

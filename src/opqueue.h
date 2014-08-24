@@ -46,7 +46,7 @@ namespace cpp {
             /**
              * Executes the operation against the database connection
              */
-            virtual OpReturnCode run( Connection &conn ) = 0;
+            virtual OpReturnCode run(Connection &conn) = 0;
         };
         using DbOpPointer = std::unique_ptr<DbOp>;
 
@@ -60,8 +60,8 @@ namespace cpp {
             virtual ~OpQueue() {
             }
 
-            virtual OpReturnCode push( DbOpPointer &dbOp ) = 0;
-            virtual OpReturnCode pop( DbOpPointer &dbOp ) = 0;
+            virtual OpReturnCode push(DbOpPointer &dbOp) = 0;
+            virtual OpReturnCode pop(DbOpPointer &dbOp) = 0;
         };
 
         /**
@@ -70,20 +70,20 @@ namespace cpp {
         class OpQueueNoLock : public OpQueue {
         public:
 
-            OpQueueNoLock( size_t queueSize ) :
-                    _queue( queueSize )
+            OpQueueNoLock(size_t queueSize) :
+                    _queue(queueSize)
             {
             }
             ~OpQueueNoLock();
 
-            inline OpReturnCode push( DbOpPointer &dbOp ) {
-                return _queue.push( std::move( dbOp ).release() );
+            inline OpReturnCode push(DbOpPointer &dbOp) {
+                return _queue.push(std::move(dbOp).release());
             }
 
-            inline OpReturnCode pop( DbOpPointer &dbOp ) {
+            inline OpReturnCode pop(DbOpPointer &dbOp) {
                 DbOp *rawptr;
-                bool result = _queue.pop( rawptr );
-                if ( result ) dbOp.reset( rawptr );
+                bool result = _queue.pop(rawptr);
+                if (result) dbOp.reset(rawptr);
                 return result;
             }
 
@@ -95,22 +95,22 @@ namespace cpp {
          * Bulk insert operation.  Unordered.
          */
         struct OpQueueBulkInsertUnordered : public DbOp {
-            OpQueueBulkInsertUnordered( std::string ns,
-                               DataQueue *data,
-                               int flags = 0,
-                               const WriteConcern *wc = DEFAULT_WRITE_CONCERN );
-            OpReturnCode run( Connection &conn );
+            OpQueueBulkInsertUnordered(std::string ns,
+                                       DataQueue *data,
+                                       int flags = 0,
+                                       const WriteConcern *wc = DEFAULT_WRITE_CONCERN);
+            OpReturnCode run(Connection &conn);
             std::string _ns;
             DataQueue _data;
             int _flags;
             const WriteConcern* _wc;
 
-            static DbOpPointer make( std::string ns,
-                                     DataQueue *data,
-                                     int flags = 0,
-                                     const WriteConcern *wc = DEFAULT_WRITE_CONCERN )
+            static DbOpPointer make(std::string ns,
+                                    DataQueue *data,
+                                    int flags = 0,
+                                    const WriteConcern *wc = DEFAULT_WRITE_CONCERN)
             {
-                return DbOpPointer( new OpQueueBulkInsertUnordered( ns, data, flags, wc ) );
+                return DbOpPointer(new OpQueueBulkInsertUnordered(ns, data, flags, wc));
             }
         };
     } /*namespace mtools*/

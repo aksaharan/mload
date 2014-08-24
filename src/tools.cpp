@@ -16,6 +16,6 @@
 #include "tools.h"
 
 namespace cpp {
-    //Intentionally blank
+//Intentionally blank
 
 } /* namespace cpp */

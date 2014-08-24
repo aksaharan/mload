@@ -20,7 +20,7 @@
 
 namespace loader {
 
-    void setProgramOptions( Settings &settings, int argc, char *argv[] );
+    void setProgramOptions(Settings &settings, int argc, char *argv[]);
 
 } /* namespace cpp */
 

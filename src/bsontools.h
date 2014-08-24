@@ -25,10 +25,10 @@ namespace cpp {
     /**
      * Prints out the ordering object information
      */
-    inline std::ostream& operator<<( std::ostream &o, mongo::Ordering &rhs ) {
+    inline std::ostream& operator<<(std::ostream &o, mongo::Ordering &rhs) {
         mongo::StringBuilder buf;
-        for ( unsigned i = 0; i < MAX_ORDER_KEYS; i++ )
-            buf.append( rhs.get( i ) > 0 ? "+" : "-" );
+        for (unsigned i = 0; i < MAX_ORDER_KEYS; i++)
+            buf.append(rhs.get(i) > 0 ? "+" : "-");
         o << buf.str();
         return o;
     }
@@ -40,16 +40,16 @@ namespace cpp {
      */
     class BSONObjCmp {
     public:
-        explicit BSONObjCmp( const bson::bo &o ) :
-                _o( mongo::Ordering::make( o ) )
+        explicit BSONObjCmp(const bson::bo &o) :
+                _o(mongo::Ordering::make(o))
         {
         }
-        explicit BSONObjCmp( mongo::Ordering o ) :
-                _o( std::move( o ) )
+        explicit BSONObjCmp(mongo::Ordering o) :
+                _o(std::move(o))
         {
         }
-        bool operator()( const bson::bo &l, const bson::bo &r ) const {
-            return l.woCompare( r, _o, false ) < 0;
+        bool operator()(const bson::bo &l, const bson::bo &r) const {
+            return l.woCompare(r, _o, false) < 0;
         }
 
         mongo::Ordering ordering() const {
@@ -58,13 +58,13 @@ namespace cpp {
 
         operator std::string() const {
             mongo::StringBuilder buf;
-            for ( unsigned i = 0; i < MAX_ORDER_KEYS; i++ )
-                buf.append( _o.get( i ) > 0 ? "+" : "-" );
+            for (unsigned i = 0; i < MAX_ORDER_KEYS; i++)
+                buf.append(_o.get(i) > 0 ? "+" : "-");
             return buf.str();
         }
 
-        friend std::ostream& operator<<( std::ostream &o, BSONObjCmp &rhs ) {
-            o << std::string( rhs );
+        friend std::ostream& operator<<(std::ostream &o, BSONObjCmp &rhs) {
+            o << std::string(rhs);
             return o;
         }
 
@@ -76,21 +76,21 @@ namespace cpp {
     public:
         using KeyType = bson::bo;
 
-        BSONObjCmpDBG( bson::bo o ) :
-                _o( mongo::Ordering::make( o ) )
+        BSONObjCmpDBG(bson::bo o) :
+                _o(mongo::Ordering::make(o))
         {
         }
-        BSONObjCmpDBG( mongo::Ordering o ) :
-                _o( std::move( o ) )
+        BSONObjCmpDBG(mongo::Ordering o) :
+                _o(std::move(o))
         {
         }
-        bool operator()( const bson::bo &l, const bson::bo &r ) {
-            std::cerr << l.jsonString( mongo::JsonStringFormat::TenGen, true, false ) << "::"
-                      << r.jsonString( mongo::JsonStringFormat::TenGen, true, false ) << std::endl;
+        bool operator()(const bson::bo &l, const bson::bo &r) {
+            std::cerr << l.jsonString(mongo::JsonStringFormat::TenGen, true, false) << "::"
+                      << r.jsonString(mongo::JsonStringFormat::TenGen, true, false) << std::endl;
             bool j = l.firstElement().Long() < r.firstElement().Long();
-            bool v = l.woCompare( r, _o, false ) < 0;
-            if ( j != v )
-            assert( j == v );
+            bool v = l.woCompare(r, _o, false) < 0;
+            if (j != v)
+            assert(j == v);
             return v;
         }
 
@@ -98,7 +98,7 @@ namespace cpp {
             return _o;
         }
 
-        friend std::ostream& operator<<( std::ostream &o, BSONObjCmpDBG &rhs ) {
+        friend std::ostream& operator<<(std::ostream &o, BSONObjCmpDBG &rhs) {
             //o << rhs.ordering();
             return o;
         }

@@ -44,10 +44,10 @@ namespace loader {
     }
 
     /**
-     * Individual opagg settings.  These are the loader queues that aggregate operations
+     * Dispatcher settings.  Used to determine what to do with the aggregated operations
      * Common def here so dependencies are clean
      */
-    namespace opagg {
+    namespace dispatch {
         struct Settings {
             int writeConcern;
             bool directLoad;
@@ -88,7 +88,7 @@ namespace loader {
         Shards shards;
 
         queue::Settings queueSettings;
-        opagg::Settings opAggSettings;
+        dispatch::Settings opAggSettings;
         cpp::mtools::EndPointSettings endPointSettings;
 
         bool shard() {
@@ -106,30 +106,30 @@ namespace loader {
         void process() {
             endPointSettings.startImmediate = false;
             indexHas_id = false;
-            indexPos_id = size_t( -1 );
-            size_t count { };
-            shardKeysBson = mongo::fromjson( shardKeyJson );
-            for ( bson::bo::iterator i( shardKeysBson ); i.more(); ) {
+            indexPos_id = size_t(-1);
+            size_t count {};
+            shardKeysBson = mongo::fromjson(shardKeyJson);
+            for (bson::bo::iterator i(shardKeysBson); i.more();) {
                 bson::be key = i.next();
-                if ( key.valueStringData() == std::string( "hashed" ) ) hashed = true;
-                else if ( key.Int() != 1 && key.Int() != -1 ) {
+                if (key.valueStringData() == std::string("hashed")) hashed = true;
+                else if (key.Int() != 1 && key.Int() != -1) {
                     std::cerr << "Unknown value for key: " << key << "\nValues are 1, -1, hashed"
                               << std::endl;
-                    exit( 1 );
+                    exit(1);
                 }
-                shardKeyFields.push_back( key.fieldName() );
-                if ( !indexHas_id && key.fieldNameStringData().toString() == "_id" ) {
+                shardKeyFields.push_back(key.fieldName());
+                if (!indexHas_id && key.fieldNameStringData().toString() == "_id") {
                     indexHas_id = true;
                     indexPos_id = count;
                 }
                 ++count;
             }
-            if ( hashed && count > 1 ) {
+            if (hashed && count > 1) {
                 std::cerr << "MongoDB currently only supports hashing of a single field"
                           << std::endl;
-                exit( 1 );
+                exit(1);
             }
-            if ( !indexHas_id ) add_id = false;
+            if (!indexHas_id) add_id = false;
             opAggSettings.sortIndex = shardKeysBson;
             queueSettings.sortIndex = shardKeysBson;
 

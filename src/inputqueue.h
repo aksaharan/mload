@@ -21,7 +21,7 @@
 #include "loaderdefs.h"
 #include "mongocxxdriver.h"
 #include "mongocluster.h"
-#include "opaggregator.h"
+#include "chunkdispatch.h"
 
 namespace loader {
     namespace queue {
@@ -62,7 +62,7 @@ namespace loader {
             /**
              * Push is called when the LoadBuilder is ready to have any values required read
              */
-            virtual void push( LoadBuilder *stage ) = 0;
+            virtual void push(LoadBuilder *stage) = 0;
 
             /**
              * Is the queue empty?
@@ -80,7 +80,7 @@ namespace loader {
             /**
              * @return the opAggregator that the queue should post to
              */
-            opagg::OpAggregator* postTo() {
+            dispatch::AbstractChunkDispatch* postTo() {
                 return _opAgg;
             }
 
@@ -91,8 +91,7 @@ namespace loader {
                 return _owner;
             }
 
-            size_t queueSize()
-            {
+            size_t queueSize() {
                 return _queueSize;
             }
 
@@ -104,12 +103,12 @@ namespace loader {
             }
 
         protected:
-            LoadQueue( LoadQueueHolder *owner, const Bson &UBIndex );
+            LoadQueue(LoadQueueHolder *owner, const Bson &UBIndex);
 
         private:
             LoadQueueHolder *_owner;
             size_t _queueSize;
-            opagg::OpAggregator *_opAgg;
+            dispatch::AbstractChunkDispatch *_opAgg;
             const Bson _UBIndex;
         };
 
@@ -119,17 +118,17 @@ namespace loader {
          */
         class LoadQueueHolder {
         public:
-            LoadQueueHolder( Settings settings,
-                             cpp::mtools::MongoCluster &mCluster,
-                             opagg::OpAggregatorHolder *out,
-                             cpp::mtools::MongoCluster::NameSpace ns ) :
-                    _settings( std::move( settings ) ),
-                    _mCluster( mCluster ),
-                    _out( out ),
-                    _inputPlan( cpp::mtools::MongoCluster::CHUNK_SORT ),
-                    _ns( ns )
+            LoadQueueHolder(Settings settings,
+                            cpp::mtools::MongoCluster &mCluster,
+                            dispatch::ChunkDispatcher *out,
+                            cpp::mtools::MongoCluster::NameSpace ns) :
+                    _settings(std::move(settings)),
+                    _mCluster(mCluster),
+                    _out(out),
+                    _inputPlan(cpp::mtools::MongoCluster::CHUNK_SORT),
+                    _ns(ns)
             {
-                init( _ns );
+                init(_ns);
             }
 
             ~LoadQueueHolder() {
@@ -140,15 +139,15 @@ namespace loader {
              * @return the stage for a single bson value.
              */
             //TODO: Look at forcing more localization on the search
-            LoadQueue* getStage( const Bson &indexValue ) {
-                return _inputPlan.upperBound( indexValue ).get();
+            LoadQueue* getStage(const Bson &indexValue) {
+                return _inputPlan.upperBound(indexValue).get();
             }
 
             /**
              * returns the opAggregator for that upper bound chunk key
              */
-            opagg::OpAggregator* getOpAggForChunk( Key key ) {
-                return out()->at( key ).get();
+            dispatch::AbstractChunkDispatch* getOpAggForChunk(Key key) {
+                return out()->at(key).get();
             }
 
             /**
@@ -164,7 +163,7 @@ namespace loader {
             /**
              * Sets up a single name space
              */
-            void init( const cpp::mtools::MongoCluster::NameSpace &ns );
+            void init(const cpp::mtools::MongoCluster::NameSpace &ns);
 
             /**
              * Clear the queues
@@ -174,13 +173,13 @@ namespace loader {
             cpp::mtools::MongoCluster& cluster() {
                 return _mCluster;
             }
-            opagg::OpAggregatorHolder *out() {
+            dispatch::ChunkDispatcher *out() {
                 return _out;
             }
 
             Settings _settings;
             cpp::mtools::MongoCluster &_mCluster;
-            opagg::OpAggregatorHolder *_out;
+            dispatch::ChunkDispatcher *_out;
             InputPlan _inputPlan;
             cpp::mtools::MongoCluster::NameSpace _ns;
 
@@ -188,27 +187,26 @@ namespace loader {
 
         class DirectLoadQueue : public LoadQueue {
         public:
-            DirectLoadQueue( LoadQueueHolder *owner, Bson UBIndex ) :
-                    LoadQueue( owner, UBIndex )
+            DirectLoadQueue(LoadQueueHolder *owner, Bson UBIndex) :
+                    LoadQueue(owner, UBIndex)
             {
-                _bsonHolder.reserve( queueSize() );
+                _bsonHolder.reserve(queueSize());
             }
 
-            void push( LoadBuilder *stage ) {
-                _bsonHolder.push_back( stage->getFinalDoc() );
-                if ( _bsonHolder.size() > queueSize() ) {
-                    postTo()->push( &_bsonHolder );
-                    _bsonHolder.reserve( queueSize() );
+            void push(LoadBuilder *stage) {
+                _bsonHolder.push_back(stage->getFinalDoc());
+                if (_bsonHolder.size() > queueSize()) {
+                    postTo()->push(&_bsonHolder);
+                    _bsonHolder.reserve(queueSize());
                 }
             }
 
             void clean() {
-                if ( !_bsonHolder.empty() )
-                    postTo()->push( &_bsonHolder );
+                if (!_bsonHolder.empty()) postTo()->push(&_bsonHolder);
             }
 
-            static LoadQueuePointer create( LoadQueueHolder *owner, Bson UBIndex ) {
-                return LoadQueuePointer( new DirectLoadQueue( owner, UBIndex ) );
+            static LoadQueuePointer create(LoadQueueHolder *owner, Bson UBIndex) {
+                return LoadQueuePointer(new DirectLoadQueue(owner, UBIndex));
             }
 
         private:
@@ -221,32 +219,31 @@ namespace loader {
 
         class RAMLoadQueue : public LoadQueue {
         public:
-            RAMLoadQueue( LoadQueueHolder *owner, const Bson &UBIndex, const Bson &index ) :
-                    LoadQueue( owner, UBIndex )
+            RAMLoadQueue(LoadQueueHolder *owner, const Bson &UBIndex, const Bson &index) :
+                    LoadQueue(owner, UBIndex)
             {
             }
 
-            void push( LoadBuilder *stage ) {
-                _bsonHolder.push_back( std::make_pair( stage->getIndex(), stage->getFinalDoc() ) );
-                if ( _bsonHolder.size() > queueSize() ) {
-                    postTo()->pushSort( &_bsonHolder );
+            void push(LoadBuilder *stage) {
+                _bsonHolder.push_back(std::make_pair(stage->getIndex(), stage->getFinalDoc()));
+                if (_bsonHolder.size() > queueSize()) {
+                    postTo()->pushSort(&_bsonHolder);
                 }
             }
 
             void clean() {
-                if ( !_bsonHolder.empty() )
-                    postTo()->pushSort( &_bsonHolder );
+                if (!_bsonHolder.empty()) postTo()->pushSort(&_bsonHolder);
             }
 
             bool empty() {
                 return _bsonHolder.empty();
             }
 
-            static LoadQueuePointer create( LoadQueueHolder *owner,
-                                            const Bson &UBIndex,
-                                            const Bson &index )
+            static LoadQueuePointer create(LoadQueueHolder *owner,
+                                           const Bson &UBIndex,
+                                           const Bson &index)
             {
-                return LoadQueuePointer( new RAMLoadQueue( owner, UBIndex, index ) );
+                return LoadQueuePointer(new RAMLoadQueue(owner, UBIndex, index));
             }
 
         private:
@@ -260,16 +257,16 @@ namespace loader {
          */
         class IndexedBucketQueue : public DirectLoadQueue {
         public:
-            IndexedBucketQueue( LoadQueueHolder *owner, const Bson &UBIndex ) :
-                    DirectLoadQueue( owner, UBIndex )
+            IndexedBucketQueue(LoadQueueHolder *owner, const Bson &UBIndex) :
+                    DirectLoadQueue(owner, UBIndex)
             {
             }
 
-            static LoadQueuePointer create( LoadQueueHolder *owner,
-                                            const Bson &UBIndex,
-                                            const Bson &index )
+            static LoadQueuePointer create(LoadQueueHolder *owner,
+                                           const Bson &UBIndex,
+                                           const Bson &index)
             {
-                return LoadQueuePointer( new IndexedBucketQueue( owner, UBIndex ) );
+                return LoadQueuePointer(new IndexedBucketQueue(owner, UBIndex));
             }
         };
 

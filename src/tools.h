@@ -32,8 +32,8 @@ namespace cpp {
 
 #ifdef __linux__
     inline size_t getTotalSystemMemory() {
-        long pages = sysconf( _SC_PHYS_PAGES );
-        long page_size = sysconf( _SC_PAGE_SIZE );
+        long pages = sysconf( _SC_PHYS_PAGES);
+        long page_size = sysconf( _SC_PAGE_SIZE);
         return pages * page_size;
     }
 #endif
@@ -66,7 +66,7 @@ namespace cpp {
     template<typename T>
     class HasShiftLeftImpl : public SfinaeTypes {
         struct BaseMixin {
-            friend std::ostream& operator<<( T t, std::ostream &o ) {
+            friend std::ostream& operator<<(T t, std::ostream &o) {
                 return o;
             }
         };
@@ -76,11 +76,11 @@ namespace cpp {
         template<typename H, H h> class Helper {
         };
         template<typename U>
-        static constexpr two deduce( U*, Helper<void (BaseMixin::*)(), &U::operator<<>* = 0 );
-        static constexpr one deduce( ...);
+        static constexpr two deduce(U*, Helper<void (BaseMixin::*)(), &U::operator<<>* = 0);
+        static constexpr one deduce(...);
 
     public:
-        static constexpr bool value = sizeof(one) == sizeof( deduce( (Base*) ( 0 ) ) );
+        static constexpr bool value = sizeof(one) == sizeof(deduce((Base*) (0)));
     };
 
     template<typename T>
@@ -104,21 +104,20 @@ namespace cpp {
             endTime = T::now();
         }
         long seconds() {
-            return std::chrono::duration_cast<std::chrono::seconds>( endTime - startTime ).count();
+            return std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime).count();
         }
 
         long nanos() {
-            return std::chrono::duration_cast<std::chrono::nanoseconds>( endTime - startTime ).count();
+            return std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
         }
 
         long millis() {
-            return std::chrono::duration_cast<std::chrono::milliseconds>( endTime - startTime )
-                    .count();
+            return std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
         }
 
         template<typename Td = std::chrono::nanoseconds>
         Td duration() {
-            return std::chrono::duration_cast<Td>( endTime - startTime );
+            return std::chrono::duration_cast<Td>(endTime - startTime);
         }
     };
 
@@ -141,7 +140,7 @@ namespace cpp {
 
         void lap() {
             TimePoint end = T::now();
-            laps.emplace_back( end - checkTime );
+            laps.emplace_back(end - checkTime);
             checkTime = end;
         }
 
@@ -150,20 +149,18 @@ namespace cpp {
             start();
         }
 
-        void reserver( size_t size ) {
-            laps.reserve( size );
+        void reserver(size_t size) {
+            laps.reserve(size);
         }
         //template < typename U = std::chrono::nanoseconds >
         long duration() {
-            TimePoint total = std::accumulate( std::begin( laps ),
-                                               std::end( laps ),
-                                               TimePoint { } );
-            return std::chrono::duration_cast<std::chrono::nanoseconds>( total ).count();
+            TimePoint total = std::accumulate(std::begin(laps), std::end(laps), TimePoint {});
+            return std::chrono::duration_cast<std::chrono::nanoseconds>(total).count();
         }
 
         //template < typename U = std::chrono::nanoseconds>
         unsigned long long avg() {
-            if ( laps.empty() ) return 0;
+            if (laps.empty()) return 0;
             return duration() / laps.size();
             //return duration<U>() / laps.size();
         }
@@ -179,9 +176,9 @@ namespace cpp {
         using EventTime = std::tuple<std::chrono::high_resolution_clock::time_point, E>;
         std::deque<EventTime> events;
 
-        void insertEvent( E event ) {
-            EventTime inter = EventTime( std::chrono::high_resolution_clock::now(), event );
-            events.push_back( inter );
+        void insertEvent(E event) {
+            EventTime inter = EventTime(std::chrono::high_resolution_clock::now(), event);
+            events.push_back(inter);
         }
     };
 
@@ -189,10 +186,9 @@ namespace cpp {
      * Arg 2 is the ceiling.  If Arg1 exceeds the ceiling the ceiling is returned using Arg1's type
      */
     template<typename T, typename U>
-    T SetCeiling( const T &t, const U &u ) {
-        return t > u ? T( u ) : t;
+    T SetCeiling(const T &t, const U &u) {
+        return t > u ? T(u) : t;
     }
-
 
     /*
      * Disk reference types
@@ -220,8 +216,8 @@ namespace cpp {
     };
 
     template<typename Tp, typename ... Args>
-    inline std::unique_ptr<Tp> make_unique( Args ...args ) {
-        return std::unique_ptr<Tp>( new Tp( std::forward<Args>(args)... ) );
+    inline std::unique_ptr<Tp> make_unique(Args ...args) {
+        return std::unique_ptr<Tp>(new Tp(std::forward<Args>(args)...));
     }
 } /* namespace cpp */
 

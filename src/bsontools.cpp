@@ -16,6 +16,6 @@
 #include "bsontools.h"
 
 namespace cpp {
-    //This space intentionally empty
+//This space intentionally empty
 
 } /* namespace cpp */

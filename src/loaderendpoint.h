@@ -20,7 +20,6 @@
 
 namespace loader {
 
-
     /*
      * Defines the endpoints so they no longer need to be called as templates and are ready for
      * use by the loader

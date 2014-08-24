@@ -47,17 +47,17 @@ namespace mongo {
     class Hasher : private boost::noncopyable {
     public:
 
-        explicit Hasher( HashSeed seed );
+        explicit Hasher(HashSeed seed);
         ~Hasher() {
         }
         ;
 
         //pointer to next part of input key, length in bytes to read
-        void addData( const void * keyData, size_t numBytes );
+        void addData(const void * keyData, size_t numBytes);
 
         //finish computing the hash, put the result in the digest
         //only call this once per Hasher
-        void finish( HashDigest out );
+        void finish(HashDigest out);
 
     private:
         md5_state_t _md5State;
@@ -69,8 +69,8 @@ namespace mongo {
         /* Eventually this may be a more sophisticated factory
          * for creating other hashers, but for now use MD5.
          */
-        static Hasher* createHasher( HashSeed seed ) {
-            return new Hasher( seed );
+        static Hasher* createHasher(HashSeed seed) {
+            return new Hasher(seed);
         }
 
     private:
@@ -101,7 +101,7 @@ namespace mongo {
          * the associated "getKeys" and "makeSingleKey" method in the
          * hashindex type is changed accordingly.
          */
-        static long long int hash64( const BSONElement& e, HashSeed seed );
+        static long long int hash64(const BSONElement& e, HashSeed seed);
 
         /* This incrementally computes the hash of BSONElement "e"
          * using hash function "h".  If "includeFieldName" is true,
@@ -111,7 +111,7 @@ namespace mongo {
          * squashing elements of the same canonical type.
          * Used as a helper for hash64 above.
          */
-        static void recursiveHash( Hasher* h, const BSONElement& e, bool includeFieldName );
+        static void recursiveHash(Hasher* h, const BSONElement& e, bool includeFieldName);
 
     private:
         BSONElementHasher();
