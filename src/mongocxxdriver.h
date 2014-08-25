@@ -25,5 +25,5 @@ namespace mongo {
      * Changes auto_ptr to unique_ptr so mongo plays well with stl
      */
     using Cursor = std::unique_ptr<mongo::DBClientCursor>;
-} //namespace mongo
+}  //namespace mongo
 

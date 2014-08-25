@@ -51,4 +51,4 @@ namespace cpp {
             return CheckConnError(conn);
         }
     }
-} /* namespace tools */
+}  //namespace mtools

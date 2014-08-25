@@ -23,4 +23,4 @@ namespace loader {
         return next;
     }
 
-} /* namespace loader */
+}  //namespace loader

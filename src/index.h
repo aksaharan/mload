@@ -34,26 +34,26 @@ namespace cpp {
         }
 
         template<typename IndexDataType>
-        bool operator()(const IndexDataType &l, const IndexDataType &r) const {
+        bool operator()(const IndexDataType &lhs, const IndexDataType &rhs) const {
             static_assert(std::is_same<typename IndexDataType::first_type, Key>::value, "Need to have the same key types to compare");
-            return compare(l.first, r.first);
+            return compare(lhs.first, rhs.first);
         }
 
         template<typename IndexDataType>
-        bool operator()(const Key &l, const IndexDataType &r) const {
+        bool operator()(const Key &lhs, const IndexDataType &rhs) const {
             static_assert(std::is_same<typename IndexDataType::first_type, Key>::value, "Need to have the same key types to compare");
-            return compare(l, r.first);
+            return compare(lhs, rhs.first);
         }
 
         template<typename IndexDataType>
-        bool operator()(const IndexDataType &l, const Key &r) const {
+        bool operator()(const IndexDataType &lhs, const Key &rhs) const {
             static_assert(std::is_same<typename IndexDataType::first_type, Key>::value, "Need to have the same key types to compare");
-            return compare(l.first, r);
+            return compare(lhs.first, rhs);
         }
 
-        friend std::ostream& operator<<(std::ostream &o, const IndexPairCompare &c) {
-            o << c.compare;
-            return o;
+        friend std::ostream& operator<<(std::ostream &out, const IndexPairCompare &cmp) {
+            out << cmp.compare;
+            return out;
         }
 
         //NOT const.  The container can declare this class const if so desired
@@ -237,4 +237,4 @@ namespace cpp {
 
     template<typename Key, typename Value, typename Cmp = std::less<Key>> using Index = BasicIndex<Key, Value, Cmp>;
 
-} /* namespace cpp */
+}  //namespace cpp

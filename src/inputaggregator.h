@@ -269,6 +269,6 @@ namespace loader {
             }
         };
 
-    } /* namespace queue */
-} /* namespace loader */
+    }  //namespace queue
+} //namespace loader
 

@@ -21,4 +21,4 @@ namespace loader {
 
     void setProgramOptions(Loader::Settings &settings, int argc, char *argv[]);
 
-} /* namespace cpp */
+}  //namespace cpp

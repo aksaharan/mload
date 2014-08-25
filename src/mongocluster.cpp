@@ -104,5 +104,5 @@ namespace cpp {
             }
         }
 
-    } /* namespace mtools */
-} /* namespace cpp */
+    }  //mespace mtools
+}  //namespace cpp

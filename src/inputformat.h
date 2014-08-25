@@ -49,5 +49,5 @@ namespace loader {
         std::string _line;
     };
 
-} /* namespace loader */
+}  //namespace loader
 

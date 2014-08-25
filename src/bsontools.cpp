@@ -18,4 +18,4 @@
 namespace cpp {
 //This space intentionally empty
 
-} /* namespace cpp */
+}  //namespace cpp

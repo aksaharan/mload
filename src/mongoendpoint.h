@@ -253,5 +253,5 @@ namespace cpp {
 
         };
 
-    } /* namespace mtools */
-} /* namespace cpp */
+    }  //namespace mtools
+}  //namespace cpp

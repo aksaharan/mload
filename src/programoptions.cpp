@@ -38,9 +38,9 @@ namespace loader {
         return ret;
     }
 
-    } /*namespace*/
+    }  //namespace
 
-//TODO: Cover to C++ driver
+//TODO: Covert to C++ driver
 //TODO: config file
 //TODO: logging queue and output file
 //TODO: move the program options setup to the C++ driver
@@ -397,4 +397,4 @@ namespace loader {
         mongoc_client_destroy(client);
     }
 
-} /* namespace loader */
+}  //namespace loader

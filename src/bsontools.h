@@ -106,4 +106,4 @@ namespace cpp {
         const mongo::Ordering _o;
     };
 
-} /* namespace cpp */
+}  //namespace cpp

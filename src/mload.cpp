@@ -59,4 +59,5 @@ int main(int argc, char* argv[]) {
     std::cout << "\nTotal time: " << totalSeconds / 60 << "m" << totalSeconds % 60 << "s"
               << "\nLoad time: " << loadSeconds / 60 << "m" << loadSeconds % 60 << "s" << std::endl;
 
+    return 0;
 }

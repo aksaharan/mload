@@ -112,5 +112,5 @@ namespace cpp {
                 return DbOpPointer(new OpQueueBulkInsertUnordered(ns, data, flags, wc));
             }
         };
-    } /*namespace mtools*/
-} /* namespace cpp */
+    }  //namespace mtools
+}  //namespace cpp

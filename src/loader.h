@@ -235,4 +235,4 @@ namespace loader {
             return this->_mCluster.getConn(shard);
         }
     };
-} //namespace loader
+}  //namespace loader

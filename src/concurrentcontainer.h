@@ -179,4 +179,4 @@ namespace cpp {
 
     template<typename Value, template<typename, typename > class Container = std::deque> using ConcurrentQueue = BasicConcurrentQueue<Value, Container>;
 
-} /* namespace cpp */
+}  //namespace cpp

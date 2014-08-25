@@ -110,4 +110,4 @@ namespace loader {
             _docLoc.start = _input->pos();
         }
     }
-} /* namespace loader */
+}  //namespace loader

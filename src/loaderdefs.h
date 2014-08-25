@@ -28,6 +28,6 @@ namespace loader {
     using BsonV = std::vector<mongo::BSONObj>;
     using BsonQ = std::deque<mongo::BSONObj>;
     using BsonPairDeque = std::deque<std::pair<mongo::BSONObj, mongo::BSONObj>>;
-}
+}  //namespace loader
 
 

@@ -58,5 +58,5 @@ namespace loader {
 
     };
 
-} /* namespace loader */
+}  //namespace loader
 

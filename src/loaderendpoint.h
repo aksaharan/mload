@@ -26,4 +26,4 @@ namespace loader {
     using EndPointHolder = cpp::mtools::MongoEndPointHolder<>;
     using EndPoint = EndPointHolder::MongoEndPoint;
 
-}
+}  //namespace loader

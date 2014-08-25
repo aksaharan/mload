@@ -218,4 +218,4 @@ namespace cpp {
     inline std::unique_ptr<Tp> make_unique(Args ...args) {
         return std::unique_ptr<Tp>(new Tp(std::forward<Args>(args)...));
     }
-} /* namespace cpp */
+}  //namespace cpp

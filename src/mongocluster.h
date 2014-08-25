@@ -140,5 +140,5 @@ namespace cpp {
 
         std::ostream& operator<<(std::ostream &o, MongoCluster &c);
 
-    } /* namespace mtools */
-} /* namespace cpp */
+    }  //namespace mtools
+}  //namespace cpp

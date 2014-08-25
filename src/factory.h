@@ -25,5 +25,5 @@ namespace cpp {
         //static
     };
 
-} /* namespace cpp */
+}  //namespace cpp
 

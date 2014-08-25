@@ -43,5 +43,5 @@ namespace loader {
             for (auto &i : _inputPlan)
                 i.second->clean();
         }
-    } /* namespace queue */
-} /* namespace loader */
+    }  //namespace queue
+}  //namespace loader
