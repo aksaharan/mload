@@ -24,8 +24,10 @@ namespace cpp {
         const bson::bo MongoCluster::CHUNK_SORT = BSON("max" << 1);
 
         MongoCluster::MongoCluster(std::string conn) :
-                _conn(std::move(conn))
+                _connStr(std::move(conn)),
+                _mongoConn(true)
         {
+            _mongoConn.connect(_connStr);
             load();
         }
 
@@ -59,11 +61,9 @@ namespace cpp {
         void MongoCluster::load() {
             clear();
             //TODO: Add a sanity check this is actually a mongoS/ config server
-            mongo::DBClientConnection c;
-            c.connect(_conn);
 
             //Load shards
-            mongo::Cursor cur(c.query("config.shards"));
+            mongo::Cursor cur(_mongoConn.query("config.shards"));
             while (cur->more()) {
                 bson::bo o = cur->next();
                 std::string shard = o.getStringField("_id");
@@ -74,7 +74,7 @@ namespace cpp {
 
             //Load chunks
             //As an integrity check chunks are loaded in reverse order and then sorted
-            cur = c.query("config.chunks", mongo::Query().sort(BSON("ns" << 1 << "max" << -1)));
+            cur = _mongoConn.query("config.chunks", mongo::Query().sort(BSON("ns" << 1 << "max" << -1)));
             std::string curNs;
 
             ChunkShardMap *idx = NULL;
@@ -97,7 +97,7 @@ namespace cpp {
             //TODO: Add assert loop to ensure sorter works
 
             //Get all the mongoS
-            cur = c.query("config.mongos");
+            cur = _mongoConn.query("config.mongos");
             while (cur->more()) {
                 bson::bo o = cur->next();
                 _mongos.emplace_back(o.getStringField("_id"));

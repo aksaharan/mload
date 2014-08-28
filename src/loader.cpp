@@ -86,7 +86,7 @@ namespace loader {
          * The hardware parameters we are working with. Note that ram is free RAM when this program
          * started.  i.e. the working ram available.
          */
-        std::cout << _mCluster << "\nThreads: " << _settings.threads << " RAM(Mb): "
+        std::cout << "Threads: " << _settings.threads << " RAM(Mb): "
                   << _ramMax / 1024 / 1024 << "Starting setup" << std::endl;
 
         /*

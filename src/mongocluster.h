@@ -121,10 +121,11 @@ namespace cpp {
             friend std::ostream& operator<<(std::ostream &o, const MongoCluster &c);
 
         private:
-            std::string _conn;
+            std::string _connStr;
             Mongos _mongos;
             ShardMap _shards;
             NsChunkMap _nsChunks;
+            mongo::DBClientConnection _mongoConn;
 
             /**
              * clears all values for the loaded cluster
@@ -132,7 +133,7 @@ namespace cpp {
             void clear();
 
             /**
-             * loads values from the cluster from the _conn string
+             * loads values from the cluster from the _connStr string
              */
             void load();
 
