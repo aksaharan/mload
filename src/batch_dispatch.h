@@ -17,11 +17,11 @@
 
 #include <fstream>
 #include <memory>
-#include "concurrentcontainer.h"
+#include "concurrent_container.h"
 #include "index.h"
-#include "loaderdefs.h"
-#include "mongocluster.h"
-#include "loaderendpoint.h"
+#include "loader_defs.h"
+#include "mongo_cluster.h"
+#include "loader_end_point.h"
 
 namespace loader {
     namespace dispatch {

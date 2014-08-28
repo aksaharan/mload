@@ -18,9 +18,9 @@
 #include <deque>
 #include <memory>
 #include <unordered_map>
-#include "mongocxxdriver.h"
-#include "mongocluster.h"
-#include "mongooperations.h"
+#include "mongo_cxxdriver.h"
+#include "mongo_cluster.h"
+#include "mongo_operations.h"
 #include "threading.h"
 
 namespace cpp {

@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 #include <mongo/client/dbclient.h>
-#include "bsontools.h"
+#include "bson_tools.h"
 #include "index.h"
 #include "tools.h"
 

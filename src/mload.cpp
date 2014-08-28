@@ -18,7 +18,7 @@
 #include <mongoc.h>
 #include "loader.h"
 #include "tools.h"
-#include "programoptions.h"
+#include "program_options.h"
 
 #include "index.h"
 

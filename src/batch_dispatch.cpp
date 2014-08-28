@@ -13,7 +13,7 @@
  *    limitations under the License.
  */
 
-#include "chunkdispatch.h"
+#include "batch_dispatch.h"
 
 namespace loader {
     namespace dispatch {

@@ -14,7 +14,7 @@
  */
 
 #pragma once
-#include "mongocxxdriver.h"
+#include "mongo_cxxdriver.h"
 
 namespace cpp {
 

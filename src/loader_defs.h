@@ -13,9 +13,21 @@
  *    limitations under the License.
  */
 
-#include "bsontools.h"
+#pragma once
 
-namespace cpp {
-//This space intentionally empty
+#include <deque>
+#include <vector>
+#include "mongo_cxxdriver.h"
+#include "mongo_end_point.h"
 
-}  //namespace cpp
+namespace loader {
+    //TODO: remove once loadqueue and opagg factories are built
+    constexpr size_t DIRECT_LOAD = 8;
+
+    using Bson = mongo::BSONObj;
+    using BsonV = std::vector<mongo::BSONObj>;
+    using BsonQ = std::deque<mongo::BSONObj>;
+    using BsonPairDeque = std::deque<std::pair<mongo::BSONObj, mongo::BSONObj>>;
+}  //namespace loader
+
+

@@ -16,7 +16,7 @@
 #pragma once
 
 #include <boost/lockfree/queue.hpp>
-#include "mongocxxdriver.h"
+#include "mongo_cxxdriver.h"
 
 namespace cpp {
     namespace mtools {

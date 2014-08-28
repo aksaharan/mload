@@ -15,8 +15,8 @@
 
 #include <algorithm>
 #include <cstddef>
-#include "mongocluster.h"
-#include "mongocxxdriver.h"
+#include "mongo_cluster.h"
+#include "mongo_cxxdriver.h"
 
 namespace cpp {
     namespace mtools {

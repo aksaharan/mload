@@ -13,7 +13,7 @@
  *    limitations under the License.
  */
 
-#include "programoptions.h"
+#include "program_options.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -30,13 +30,6 @@ namespace loader {
         bool stopBalancer;
         int chunksMin;
     };
-
-    std::string toString(const bson_t *bson) {
-        char *str = bson_as_json(bson, NULL);
-        std::string ret(str);
-        bson_free(str);
-        return ret;
-    }
 
     }  //namespace
 
@@ -56,34 +49,59 @@ namespace loader {
             //TODO: make type, strategy, ordering, loadPath required
             ("help,h", "print help messages")
             //TODO:log file
-            ("logFile,l", po::value<std::string>(), "logFile - NOT YET IMPLEMENTED") //want to make sure -l doesn't get taken, so it's here
-            ("type,T", po::value<std::string>()->default_value("json"), "load type: json")
-            ("loadPath,p", po::value<std::string>(&settings.loadDir)->required(), "directory to load files from")
-            ("fileRegex,r", po::value<std::string>(&settings.fileRegex), "regular expression to match files on: (.*)(json)")
-            ("workPath", po::value<std::string>(&settings.workPath), "directory to save temporary work in")
-            ("uri,u", po::value<std::string>(&settings.connection)->default_value("127.0.0.1:27017"), "mongodb connection URI. See http://docs.mongodb.org/manual/reference/connection-string/")
+            ("logFile,l", po::value<std::string>(),
+                    "logFile - NOT YET IMPLEMENTED")
+            ("type,T", po::value<std::string>()->default_value("json"),
+                    "load type: json")
+            ("loadPath,p", po::value<std::string>(&settings.loadDir)->required(),
+                    "directory to load files from")
+            ("fileRegex,r", po::value<std::string>(&settings.fileRegex),
+                    "regular expression to match files on: (.*)(json)")
+            ("workPath", po::value<std::string>(&settings.workPath),
+                    "directory to save temporary work in")
+            ("uri,u", po::value<std::string>(&settings.connection)
+                    ->default_value("127.0.0.1:27017"), "mongodb connection URI.")
             ("db,d", po::value<std::string>(&settings.database)->required(), "database")
             ("coll,c", po::value<std::string>(&settings.collection)->required(), "collection")
-            ("writeConcern,w", po::value<int>(&settings.dispatchSettings.writeConcern)->default_value(0), "write concern, # of nodes")
+            ("writeConcern,w", po::value<int>(&settings.dispatchSettings.writeConcern)
+                    ->default_value(0), "write concern, # of nodes")
             //TODO: Sync delay, need to do it to all replicas
-            ("directLoad,D", po::value<bool>(&settings.endPointSettings.directLoad)->default_value(false), "Directly load into mongoD, bypass mongoS")
-            ("syncDelay,S", po::value<int>(&settings.syncDelay)->default_value(-1), "NOT YET IMPLEMENTED") //reserving S
-            ("batchSize,B", po::value<size_t>(&settings.dispatchSettings.queueSize)->default_value(10000), "size of bson array sent to driver")
-            ("inputThreads,t", po::value<int>(&settings.threads)->default_value(0), "threads, 0 for auto limit, -x for a limit from the max hardware threads(default: 0)")
-            ("endPointThreads,e", po::value<size_t>(&settings.endPointSettings.threadCount)->default_value(3), "threads per end point")
-            ("endPointLocklessMissWait", po::value<size_t>(&settings.endPointSettings.sleepTime)->default_value(10), "Wait time for mongo connections with a lockless miss method")
-            ("endPointQueueSize", po::value<size_t>(&settings.endPointSettings.queueSize)->default_value(10), "Lockless queue size")
-            ("opAggThreads", po::value<size_t>(&settings.dispatchSettings.workThreads)->default_value(10), "Threads available to the Operations Aggregator to do work (i.e. spill to disk)")
-            ("readQueueSize", po::value<long unsigned int>(&settings.aggregatorSettings.queueSize)->default_value(10000), "Read queue size")
-            ("dropDb", po::value<bool>(&initTarget.dropDb)->default_value(false), "DANGER: Drop the database")
-            ("dropColl", po::value<bool>(&initTarget.dropColl)->default_value(false), "DANGER: Drop the collection")
+            ("directLoad,D", po::value<bool>(&settings.endPointSettings.directLoad)
+                    ->default_value(false), "Directly load into mongoD, bypass mongoS")
+            ("syncDelay,S", po::value<int>(&settings.syncDelay)
+                    ->default_value(-1), "NOT YET IMPLEMENTED") //reserving S
+            ("batchSize,B", po::value<size_t>(&settings.dispatchSettings.queueSize)
+                    ->default_value(10000), "size of bson array sent to driver")
+            ("inputThreads,t", po::value<int>(&settings.threads)
+                    ->default_value(0), "threads, 0 for auto limit, "
+                            "-x for a limit from the max hardware threads(default: 0)")
+            ("endPointThreads,e", po::value<size_t>(&settings.endPointSettings.threadCount)
+                    ->default_value(3), "threads per end point")
+            ("endPointLocklessMissWait", po::value<size_t>(&settings.endPointSettings.sleepTime)
+                    ->default_value(10), "Wait time for mongo connections with a lockless miss method")
+            ("endPointQueueSize", po::value<size_t>(&settings.endPointSettings.queueSize)
+                    ->default_value(10), "Lockless queue size")
+            ("opAggThreads", po::value<size_t>(&settings.dispatchSettings.workThreads)
+                    ->default_value(10), "Threads available to the Operations Aggregator to do work (i.e. spill to disk)")
+            ("readQueueSize", po::value<long unsigned int>(&settings.aggregatorSettings.queueSize)
+                    ->default_value(10000), "Read queue size")
+            ("dropDb", po::value<bool>(&initTarget.dropDb)->default_value(false),
+                    "DANGER: Drop the database")
+            ("dropColl", po::value<bool>(&initTarget.dropColl)->default_value(false),
+                    "DANGER: Drop the collection")
             ("shard,s", po::value<bool>()->default_value(true), "Used a sharded setup")
-            ("stopBalancer", po::value<bool>(&initTarget.stopBalancer)->default_value(false), "stop the balancer")
-            ("sortKey,k", po::value<std::string>(&settings.shardKeyJson)->required(), "Dotted fields not supported (i.e. subdoc.field) must quote fields (\"_id\":\"hashed\"")
-            ("add_id", po::value<bool>(&settings.add_id)->default_value(true), "Add _id if it doesn't exist, operations will error if _id is required")
-            ("initialChunksPerShard,i", po::value<int>(&settings.chunksPerShard)->default_value(-1), "Number of initial chunks")
-            //TODO: wait for presplit should change to total = inital and distribution is <= 1 between all shards and everything is stable for 5s.
-            ("waitForPresplit,W", po::value<int>(&initTarget.chunksMin)->default_value(-1), "Wait for number of chunks per shard, defaults to 2 if shardColl is using a hash, if sortJson isn't hashed **YOU** must start the presplit")
+            ("stopBalancer", po::value<bool>(&initTarget.stopBalancer)->default_value(false),
+                    "stop the balancer")
+            ("shardKey,k", po::value<std::string>(&settings.shardKeyJson)->required(),
+                    "Dotted fields not supported (i.e. subdoc.field) must quote fields "
+                    "(\"_id\":\"hashed\"")
+            ("add_id", po::value<bool>(&settings.add_id)->default_value(true),
+                    "Add _id if it doesn't exist, operations will error if _id is required")
+            ("initialChunksPerShard,i", po::value<int>(&settings.chunksPerShard)->default_value(-1),
+                    "Number of initial chunks")
+            ("waitForPresplit,W", po::value<int>(&initTarget.chunksMin)->default_value(-1),
+                    "Wait for number of chunks per shard, defaults to 2 if shardColl is using a hash"
+                    ", if sortJson isn't hashed **YOU** must start the presplit")
             ;
         cmdline.add_options()
             ("config", po::value<std::string>(), "config file - NOT YET IMPLEMENTED")
@@ -261,7 +279,8 @@ namespace loader {
                                                       NULL, &error))
                     {
                         std::cerr << "Error sharding collection: " << error.message << std::endl;
-                        //If we were supposed to have dropped the collection, bail.  We should be able to create and shard it.
+                        //If we were supposed to have dropped the collection, bail.
+                        //We should be able to create and shard it.
                         if (initTarget.dropColl) {
                             std::cerr
                                     << "Error sharding a collection that should have been dropped.  Exiting."

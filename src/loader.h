@@ -18,12 +18,12 @@
 #include <vector>
 #include <fstream>
 #include <mongo/client/dbclient.h>
-#include "bsontools.h"
-#include "concurrentcontainer.h"
-#include "inputprocessor.h"
-#include "loaderdefs.h"
-#include "mongoendpoint.h"
-#include "chunkdispatch.h"
+#include "bson_tools.h"
+#include "concurrent_container.h"
+#include "input_processor.h"
+#include "loader_defs.h"
+#include "mongo_end_point.h"
+#include "batch_dispatch.h"
 #include "tools.h"
 #include "threading.h"
 

@@ -5,7 +5,7 @@
  *      Author: charlie
  */
 
-#include "inputformat.h"
+#include "input_format.h"
 #include <assert.h>
 
 namespace loader {

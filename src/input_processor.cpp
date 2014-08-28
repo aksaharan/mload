@@ -13,7 +13,7 @@
  *    limitations under the License.
  */
 
-#include "inputprocessor.h"
+#include "input_processor.h"
 #include "loader.h"
 #include "util/hasher.h"
 

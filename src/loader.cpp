@@ -21,8 +21,8 @@
 #include <tuple>
 #include <parallel/algorithm>
 #include <boost/filesystem.hpp>
-#include "inputprocessor.h"
-#include "mongocxxdriver.h"
+#include "input_processor.h"
+#include "mongo_cxxdriver.h"
 
 /*
  * Strategy ideas:

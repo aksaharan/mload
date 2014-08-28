@@ -15,9 +15,9 @@
 
 #pragma once
 
-#include "inputaggregator.h"
-#include "inputformat.h"
-#include "mongocxxdriver.h"
+#include "input_batcher.h"
+#include "input_format.h"
+#include "mongo_cxxdriver.h"
 
 namespace loader {
 

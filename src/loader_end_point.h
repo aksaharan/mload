@@ -15,19 +15,15 @@
 
 #pragma once
 
-#include <deque>
-#include <vector>
-#include "mongocxxdriver.h"
-#include "mongoendpoint.h"
+#include "mongo_end_point.h"
 
 namespace loader {
-    //TODO: remove once loadqueue and opagg factories are built
-    constexpr size_t DIRECT_LOAD = 8;
 
-    using Bson = mongo::BSONObj;
-    using BsonV = std::vector<mongo::BSONObj>;
-    using BsonQ = std::deque<mongo::BSONObj>;
-    using BsonPairDeque = std::deque<std::pair<mongo::BSONObj, mongo::BSONObj>>;
+    /*
+     * Defines the endpoints so they no longer need to be called as templates and are ready for
+     * use by the loader
+     */
+    using EndPointHolder = cpp::mtools::MongoEndPointHolder<>;
+    using EndPoint = EndPointHolder::MongoEndPoint;
+
 }  //namespace loader
-
-

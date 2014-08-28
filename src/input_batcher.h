@@ -17,11 +17,11 @@
 
 #include <memory>
 #include <unordered_map>
-#include "chunkdispatch.h"
+#include "batch_dispatch.h"
 #include "index.h"
-#include "loaderdefs.h"
-#include "mongocxxdriver.h"
-#include "mongocluster.h"
+#include "loader_defs.h"
+#include "mongo_cxxdriver.h"
+#include "mongo_cluster.h"
 
 namespace loader {
     namespace aggregator {

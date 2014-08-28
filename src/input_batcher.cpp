@@ -13,7 +13,7 @@
  *    limitations under the License.
  */
 
-#include "inputaggregator.h"
+#include "input_batcher.h"
 
 namespace loader {
     namespace aggregator {
