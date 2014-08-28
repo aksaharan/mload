@@ -2,3 +2,5 @@
 /Release
 .settings
 run-cr-update
+.sconsign.dblite
+SConfig.pyc
