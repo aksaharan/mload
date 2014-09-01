@@ -22,7 +22,10 @@ namespace loader {
     InputProcessor::InputProcessor(Loader* owner, std::string ns) :
             _owner(owner),
             _ns(ns),
-            _inputAggregator(_owner->queueSettings(), owner->cluster(), &owner->chunkDispatcher(), ns),
+            _inputAggregator(_owner->queueSettings(),
+                             owner->cluster(),
+                             &owner->chunkDispatcher(),
+                             ns),
             _docLogicalLoc {}
     {
     }
@@ -103,7 +106,8 @@ namespace loader {
             assert(!_docShardKey.isEmpty());
             //If hashing is required, do it
             if (_owner->settings().hashed) _docShardKey =
-                    BSON("_id-hash" << mongo::BSONElementHasher::hash64(_docShardKey.firstElement(), mongo::BSONElementHasher::DEFAULT_HASH_SEED));
+                    BSON("_id-hash" << mongo::BSONElementHasher::hash64(_docShardKey.firstElement(),
+                                           mongo::BSONElementHasher::DEFAULT_HASH_SEED));
             _extra = &extra;
             auto* stage = _inputAggregator.getStage(_docShardKey);
             stage->push(this);
