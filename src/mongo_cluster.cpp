@@ -40,19 +40,19 @@ namespace cpp {
             _mongos.clear();
         }
 
-        std::ostream& operator<<(std::ostream &o, MongoCluster &c) {
+        std::ostream& operator<<(std::ostream& o, MongoCluster& c) {
             o << "Shards:" << "\n";
-            for (auto &i : c.shards())
+            for (auto& i : c.shards())
                 o << i.first << " : " << i.second << "\n";
 
             o << "\nChunks:" << "\n";
-            for (auto &i : c.nsChunks()) {
+            for (auto& i : c.nsChunks()) {
                 o << i.first << "\n";
-                for (auto &s : i.second.container())
+                for (auto& s : i.second.container())
                     o << "\tUpper Bound: " << s.first << " Shard: " << s.second->first << "\n";
             }
             o << "\nMongoS:" << "\n";
-            for (auto &i : c.mongos())
+            for (auto& i : c.mongos())
                 o << i << "\n";
 
             return o;
@@ -77,7 +77,7 @@ namespace cpp {
             cur = _mongoConn.query("config.chunks", mongo::Query().sort(BSON("ns" << 1 << "max" << -1)));
             std::string curNs;
 
-            ChunkShardMap *idx = NULL;
+            ChunkShardMap* idx = NULL;
             while (cur->more()) {
                 bson::bo o = cur->next();
                 std::string shard = o.getStringField("shard");

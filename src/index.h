@@ -34,24 +34,24 @@ namespace cpp {
         }
 
         template<typename IndexDataType>
-        bool operator()(const IndexDataType &lhs, const IndexDataType &rhs) const {
+        bool operator()(const IndexDataType& lhs, const IndexDataType& rhs) const {
             static_assert(std::is_same<typename IndexDataType::first_type, Key>::value, "Need to have the same key types to compare");
             return compare(lhs.first, rhs.first);
         }
 
         template<typename IndexDataType>
-        bool operator()(const Key &lhs, const IndexDataType &rhs) const {
+        bool operator()(const Key& lhs, const IndexDataType& rhs) const {
             static_assert(std::is_same<typename IndexDataType::first_type, Key>::value, "Need to have the same key types to compare");
             return compare(lhs, rhs.first);
         }
 
         template<typename IndexDataType>
-        bool operator()(const IndexDataType &lhs, const Key &rhs) const {
+        bool operator()(const IndexDataType& lhs, const Key& rhs) const {
             static_assert(std::is_same<typename IndexDataType::first_type, Key>::value, "Need to have the same key types to compare");
             return compare(lhs.first, rhs);
         }
 
-        friend std::ostream& operator<<(std::ostream &out, const IndexPairCompare &cmp) {
+        friend std::ostream& operator<<(std::ostream& out, const IndexPairCompare& cmp) {
             out << cmp.compare;
             return out;
         }
@@ -84,7 +84,7 @@ namespace cpp {
         {
         }
         template<typename ...Args>
-        BasicIndex(const BasicIndex &bi, Args&&... args) :
+        BasicIndex(const BasicIndex& bi, Args&&... args) :
                 _compare(CompareHolder(Cmp(std::forward<Args>(args)...))), _container(bi)
         {
         }
@@ -98,7 +98,7 @@ namespace cpp {
         {
         }
 
-        friend std::ostream& operator<<(std::ostream &o, const BasicIndex::iterator &i) {
+        friend std::ostream& operator<<(std::ostream& o, const BasicIndex::iterator& i) {
             o << i->first << "::" << i->second;
             return o;
         }
@@ -158,7 +158,7 @@ namespace cpp {
         /**
          * Moves from the given index to this one.
          */
-        void steal(BasicIndex &takeFrom) {
+        void steal(BasicIndex& takeFrom) {
             insertUnordered(takeFrom.begin(), takeFrom.end());
             takeFrom.clear();
         }
@@ -173,7 +173,7 @@ namespace cpp {
         /**
          * Assumes that a sort has taken place
          */
-        iterator find(const Key &key) {
+        iterator find(const Key& key) {
             auto i = std::lower_bound(begin(), end(), key, _compare);
             //TODO: remove assert, right now it's here because this should never be true
             assert(i->first == key);
@@ -185,7 +185,7 @@ namespace cpp {
         /**
          * Assumes that a sort has taken place
          */
-        Value& at(const Key &key) {
+        Value& at(const Key& key) {
             auto i = find(key);
             if (i == end()) throw std::range_error("Index out of bounds");
             return i->second;
@@ -199,7 +199,7 @@ namespace cpp {
          * Assumes sort has taken place
          * Assumes upper bounded includes infinity, so nothing is ever returned at end.
          */
-        Value& upperBoundSafe(const Key &key) {
+        Value& upperBoundSafe(const Key& key) {
             auto i = std::upper_bound(begin(), end(), key, _compare);
             //Ensure positive infinity returns the correct result
             if (i == _container.end()) --i;
@@ -209,7 +209,7 @@ namespace cpp {
         /**
          * Assumes that a sort has taken place
          */
-        Value& upperBound(const Key &key) {
+        Value& upperBound(const Key& key) {
             auto i = std::upper_bound(begin(), end(), key, _compare);
             return i->second;
         }
@@ -217,13 +217,13 @@ namespace cpp {
         /**
          * Assumes that a sort has taken place
          */
-        Value& lowerBound(const Key &key) {
+        Value& lowerBound(const Key& key) {
             auto i = std::lower_bound(begin(), end(), key, _compare);
             return i->second;
         }
 
-        friend std::ostream& operator<<(std::ostream & o, const BasicIndex &rhs) {
-            for (auto &i : rhs._container) {
+        friend std::ostream& operator<<(std::ostream & o, const BasicIndex& rhs) {
+            for (auto& i : rhs._container) {
                 o << i->first << "\n";
             }
             return o;

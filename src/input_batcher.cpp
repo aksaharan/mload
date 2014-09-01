@@ -17,7 +17,7 @@
 
 namespace loader {
     namespace aggregator {
-        AbstractInputQueue::AbstractInputQueue(InputAggregator *owner, Bson UBIndex) :
+        AbstractInputQueue::AbstractInputQueue(InputAggregator* owner, Bson UBIndex) :
                 _owner(owner),
                 _queueSize(_owner->settings().queueSize),
                 _opAgg(_owner->getOpAggForChunk(UBIndex)),
@@ -25,10 +25,10 @@ namespace loader {
         {
         }
 
-        void InputAggregator::init(const cpp::mtools::MongoCluster::NameSpace &ns) {
+        void InputAggregator::init(const cpp::mtools::MongoCluster::NameSpace& ns) {
             std::unordered_map<cpp::mtools::MongoCluster::ShardName, size_t> shardChunkCounters;
             //Assumes that nsChunks is in sorted order, or the stage setup won't work right
-            for (auto &iCm : _mCluster.nsChunks(ns)) {
+            for (auto& iCm : _mCluster.nsChunks(ns)) {
                 _inputPlan.insertUnordered(std::get<0>(iCm), AbstractInputQueuePointer {});
                 size_t depth = ++(shardChunkCounters[std::get<1>(iCm)->first]);
                 //TODO: change this to a factory that creates queues based on chunk depth in the shard
@@ -40,7 +40,7 @@ namespace loader {
         }
 
         void InputAggregator::clean() {
-            for (auto &i : _inputPlan)
+            for (auto& i : _inputPlan)
                 i.second->clean();
         }
     }  //namespace queue

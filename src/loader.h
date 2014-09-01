@@ -231,7 +231,7 @@ namespace loader {
         /**
          * Resolves a connection for a shard
          */
-        const std::string& getConn(const std::string &shard) {
+        const std::string& getConn(const std::string& shard) {
             return this->_mCluster.getConn(shard);
         }
     };

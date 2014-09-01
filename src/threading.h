@@ -38,7 +38,7 @@ namespace cpp {
      */
     class ThreadPoolWorker {
     public:
-        ThreadPoolWorker(ThreadPool &pool) :
+        ThreadPoolWorker(ThreadPool& pool) :
                 _pool(pool)
         {
         }
@@ -88,7 +88,7 @@ namespace cpp {
          * Joins all threads.  Does NOT stop them.
          */
         void joinAll() {
-            for (auto &thread : _threads)
+            for (auto& thread : _threads)
                 if (thread.joinable()) thread.join();
         }
 
@@ -174,7 +174,7 @@ namespace cpp {
          * Places the next value into the passed pointer
          * @return true if there is a value, false if empty
          */
-        bool next(Value *ret) const {
+        bool next(Value* ret) const {
             cpp::MutexLockGuard lock(_mutex);
 
             if (_container.empty()) return false;

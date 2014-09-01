@@ -29,7 +29,7 @@ namespace loader {
      */
     class InputProcessor : public aggregator::DocumentBuilder {
     public:
-        InputProcessor(Loader *owner, std::string ns);
+        InputProcessor(Loader* owner, std::string ns);
         ~InputProcessor() {
         }
 
@@ -37,7 +37,7 @@ namespace loader {
          * Takes a segment and it's logical location (i.e. the mapping to something real)
          * It then puts all the documents into the right queues
          */
-        void processSegmentToAggregator(const cpp::LocSegment &segment, cpp::LogicalLoc logicalLoc);
+        void processSegmentToAggregator(const cpp::LocSegment& segment, cpp::LogicalLoc logicalLoc);
 
         virtual Bson getFinalDoc();
         virtual Bson getIndex();

@@ -14,7 +14,7 @@ namespace loader {
 
     /*
      * Public interface for the extraction of documents from sources.
-     * bool next(mongo::BSONObj *nextDoc) is used to allow for the greatest variety of input sources
+     * bool next(mongo::BSONObj* nextDoc) is used to allow for the greatest variety of input sources
      */
     class InputFormat {
     public:
@@ -25,7 +25,7 @@ namespace loader {
          * If there is a document available, this function places the next one into the passed variable
          * @return returns true if there is document available. False otherwise.
          */
-        virtual bool next(mongo::BSONObj *nextDoc) = 0;
+        virtual bool next(mongo::BSONObj* nextDoc) = 0;
 
         /**
          * Returns the position of the document.  Should assert if such a thing isn't possible and
@@ -39,8 +39,8 @@ namespace loader {
      */
     class InputFormatJson : public InputFormat {
     public:
-        explicit InputFormatJson(const cpp::LocSegment &segment);
-        virtual bool next(mongo::BSONObj *nextDoc);
+        explicit InputFormatJson(const cpp::LocSegment& segment);
+        virtual bool next(mongo::BSONObj* nextDoc);
         virtual size_t pos() {
             return _input.tellg();
         }

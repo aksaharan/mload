@@ -65,7 +65,7 @@ namespace cpp {
     template<typename T>
     class HasShiftLeftImpl : public SfinaeTypes {
         struct BaseMixin {
-            friend std::ostream& operator<<(T t, std::ostream &o) {
+            friend std::ostream& operator<<(T t, std::ostream& o) {
                 return o;
             }
         };
@@ -185,7 +185,7 @@ namespace cpp {
      * Arg 2 is the ceiling.  If Arg1 exceeds the ceiling the ceiling is returned using Arg1's type
      */
     template<typename T, typename U>
-    T SetCeiling(const T &t, const U &u) {
+    T SetCeiling(const T& t, const U& u) {
         return t > u ? T(u) : t;
     }
 

@@ -112,7 +112,7 @@ namespace loader {
          * this and expect to use this as the source of truth for file->index mapping.
          */
         std::sort(files.begin(), files.end());
-        for (auto &i : files)
+        for (auto& i : files)
             _locSegMapping.push_back(i);
         FileQueue::ContainerType fileQ(files);
         _fileQueue.swap(fileQ);

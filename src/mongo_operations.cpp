@@ -26,7 +26,7 @@ namespace cpp {
 
         namespace {
             //TODO: change error code impl to inspect and handle different codes
-            OpReturnCode CheckConnError(Connection &conn) {
+            OpReturnCode CheckConnError(Connection& conn) {
                 //TODO: bson::bo le = GetLastErrorDetailed
                 std::string error = conn->getLastError();
                 if (!error.empty()) {
@@ -38,14 +38,14 @@ namespace cpp {
         }
 
         OpQueueBulkInsertUnordered::OpQueueBulkInsertUnordered(std::string ns,
-                                                               DataQueue *data,
+                                                               DataQueue* data,
                                                                int flags,
-                                                               const WriteConcern *wc) :
+                                                               const WriteConcern* wc) :
                 _ns(std::move(ns)), _data(std::move(*data)), _flags(flags), _wc(wc)
         {
         }
 
-        OpReturnCode OpQueueBulkInsertUnordered::run(Connection &conn) {
+        OpReturnCode OpQueueBulkInsertUnordered::run(Connection& conn) {
             conn->insert(_ns, _data, _flags, _wc);
             if (!_wc || !_wc->requiresConfirmation()) return true;
             return CheckConnError(conn);

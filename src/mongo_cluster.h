@@ -71,7 +71,7 @@ namespace cpp {
             /**
              * All chunks for a single namespace
              */
-            ChunkShardMap& nsChunks(const std::string &ns) {
+            ChunkShardMap& nsChunks(const std::string& ns) {
                 return _nsChunks.at(ns);
             }
 
@@ -85,7 +85,7 @@ namespace cpp {
             /**
              * @return count of chunks for a single namespace
              */
-            size_t chunksCount(const std::string &ns) const {
+            size_t chunksCount(const std::string& ns) const {
                 auto i = _nsChunks.find(ns);
                 if (i == _nsChunks.end()) return 0;
                 return i->second.size();
@@ -94,14 +94,14 @@ namespace cpp {
             /**
              * @return connection string for a shard
              */
-            const std::string& getConn(const std::string &shard) {
+            const std::string& getConn(const std::string& shard) {
                 return _shards.at(shard);
             }
 
             /**
              * @return given a namespace and chunk give back the shard it resides on
              */
-            ShardName getShardForChunk(const std::string &ns, const ChunkIndexKey &key) {
+            ShardName getShardForChunk(const std::string& ns, const ChunkIndexKey& key) {
                 return _nsChunks.at(ns).at(key)->first;
             }
 
@@ -110,15 +110,15 @@ namespace cpp {
              * The container is NOT cleared.
              */
             template<typename T>
-            void getShardList(T *queue) const {
-                for (auto &i : _shards)
+            void getShardList(T* queue) const {
+                for (auto& i : _shards)
                     queue->push_back(i.first);
             }
 
             /**
              * Writes the chunk config to the ostream
              */
-            friend std::ostream& operator<<(std::ostream &o, const MongoCluster &c);
+            friend std::ostream& operator<<(std::ostream& o, const MongoCluster& c);
 
         private:
             std::string _connStr;
@@ -139,7 +139,7 @@ namespace cpp {
 
         };
 
-        std::ostream& operator<<(std::ostream &o, MongoCluster &c);
+        std::ostream& operator<<(std::ostream& o, MongoCluster& c);
 
     }  //namespace mtools
 }  //namespace cpp

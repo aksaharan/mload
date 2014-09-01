@@ -40,7 +40,7 @@ namespace loader {
 //TODO: option to drop all indexes (i.e. even shard index) and then build afterward
 //TODO: option to discard_id (i.e. really fast right inserts on _id)
 //TODO: Sync delay, set on all replicas, then reset at end of load
-    void setProgramOptions(Loader::Settings &settings, int argc, char *argv[]) {
+    void setProgramOptions(Loader::Settings& settings, int argc, char* argv[]) {
         InitTarget initTarget;
         namespace po = boost::program_options;
         po::options_description generic("Generic");
@@ -115,7 +115,7 @@ namespace loader {
              po::store(po::parse_config_file(vm["config"].as<std::string>().c_str()), vm));*/
             po::notify(vm);
         }
-        catch (std::exception &e) {
+        catch (std::exception& e) {
             errormsg = e.what();
         }
         if (vm.count("help") || !errormsg.empty()) {
@@ -149,7 +149,7 @@ namespace loader {
         }
 
         bson_error_t error;
-        mongoc_client_t *client;
+        mongoc_client_t* client;
         client = mongoc_client_new(settings.connection.c_str());
         if (!client) {
             std::cerr << "Unable to connect to " << settings.connection << std::endl;
@@ -159,17 +159,17 @@ namespace loader {
         //If this is a sharded setup, then verify that the config information exists and get shards
         //TODO: Should start the fakeout here for a replica set
         if (vm["shard"].as<bool>()) {
-            bson_t *query;
+            bson_t* query;
             query = BCON_NEW("$query", "{", "}"); //bson_new();
-            mongoc_collection_t *coll;
+            mongoc_collection_t* coll;
             coll = mongoc_client_get_collection(client, "config", "shards");
-            mongoc_cursor_t *cursor;
+            mongoc_cursor_t* cursor;
             cursor = mongoc_collection_find(coll, MONGOC_QUERY_NONE, 0, 0, 0, query, NULL, NULL);
             if (!cursor) {
                 std::cerr << "Error query for shards failed" << std::endl;
                 exit(1);
             }
-            const bson_t *shard;
+            const bson_t* shard;
             while (mongoc_cursor_more(cursor) && mongoc_cursor_next(cursor, &shard)) {
                 bson_iter_t iter;
                 assert(bson_iter_init(&iter, shard));
@@ -192,10 +192,10 @@ namespace loader {
 
         //Stop the balancer if required
         if (initTarget.stopBalancer) {
-            bson_t *query, *updater;
+            bson_t* query, *updater;
             query = BCON_NEW("_id", "balancer");
             updater = BCON_NEW("$set", "{", "stopped", "true", "}");
-            mongoc_collection_t *coll;
+            mongoc_collection_t* coll;
             coll = mongoc_client_get_collection(client, "config", "settings");
             assert(coll);
             if (!mongoc_collection_update(coll, MONGOC_UPDATE_UPSERT, query, updater,
@@ -212,7 +212,7 @@ namespace loader {
 
         //If that database needs to be dropped/sharded? do it
         if (initTarget.dropColl || initTarget.dropDb || settings.shard()) {
-            bson_t *bsonCmd;
+            bson_t* bsonCmd;
 
             if (initTarget.dropDb) {
                 std::cout << "Dropping database" << std::endl;
@@ -251,7 +251,7 @@ namespace loader {
                     bson_destroy(bsonCmd);
                     //Create sharded collection
                     //TODO: Allow for using already existing collection: 1)Check to see if it exists, if that is true, make sure the shard key matches the user supplied key or use the shard key
-                    bson_t *key = bson_new_from_json(reinterpret_cast<const uint8_t*>(settings
+                    bson_t* key = bson_new_from_json(reinterpret_cast<const uint8_t*>(settings
                                                              .shardKeyJson.c_str()),
                                                      settings.shardKeyJson.size(),
                                                      &error);
@@ -301,19 +301,19 @@ namespace loader {
         //Ensure the balancer is stopped
         if (initTarget.stopBalancer) {
             std::cout << "Stopping balancer" << std::endl;
-            bson_t *selector = BCON_NEW("_id", "balancer");
-            bson_t *fields = BCON_NEW("state", BCON_INT32(1));
-            mongoc_collection_t *coll;
+            bson_t* selector = BCON_NEW("_id", "balancer");
+            bson_t* fields = BCON_NEW("state", BCON_INT32(1));
+            mongoc_collection_t* coll;
             coll = mongoc_client_get_collection(client, "config", "locks");
             assert(coll);
-            bson_t *matchExpr = BCON_NEW("state", "{", "$gt", BCON_INT32(0), "}");
-            mongoc_matcher_t *balancerRunning = mongoc_matcher_new(matchExpr, &error);
+            bson_t* matchExpr = BCON_NEW("state", "{", "$gt", BCON_INT32(0), "}");
+            mongoc_matcher_t* balancerRunning = mongoc_matcher_new(matchExpr, &error);
             if (!balancerRunning) {
                 std::cerr << "Error creating match expression: " << error.message << std::endl;
                 exit(1);
             }
             bool first = true;
-            mongoc_cursor_t *cursor;
+            mongoc_cursor_t* cursor;
             for (;;) {
                 cursor = mongoc_collection_find(coll, MONGOC_QUERY_NONE, 0, 0, 1, selector, fields,
                 NULL);
@@ -321,7 +321,7 @@ namespace loader {
                     std::cerr << "Error query for balancer failed" << std::endl;
                     exit(1);
                 }
-                const bson_t *balancerState;
+                const bson_t* balancerState;
                 if (mongoc_cursor_next(cursor, &balancerState)) {
                     if (!mongoc_matcher_match(balancerRunning, balancerState)) break;
                 }
@@ -347,8 +347,8 @@ namespace loader {
         //if the setup is hashed, wait for chunks to distribute
         if (initTarget.chunksMin > 0 && settings.hashed) {
             std::cout << "Settings up hashed presplits" << std::endl;
-            mongoc_collection_t *coll = mongoc_client_get_collection(client, "config", "chunks");
-            bson_t *pipeline = BCON_NEW("pipeline",
+            mongoc_collection_t* coll = mongoc_client_get_collection(client, "config", "chunks");
+            bson_t* pipeline = BCON_NEW("pipeline",
                                         "[",
                                         "{",
                                         "$match",
@@ -370,21 +370,21 @@ namespace loader {
                                         "}",
                                         "}",
                                         "]");
-            mongoc_cursor_t *cursor;
+            mongoc_cursor_t* cursor;
             //TODO: fix this when matcher is working
-            bson_t *matchExpr = BCON_NEW("chunkCount",
+            bson_t* matchExpr = BCON_NEW("chunkCount",
                                          "{",
                                          "$gt",
                                          BCON_INT32(initTarget.chunksMin - 1),
                                          "}");
-            mongoc_matcher_t *minChunk = mongoc_matcher_new(matchExpr, &error);
+            mongoc_matcher_t* minChunk = mongoc_matcher_new(matchExpr, &error);
             int loopCount = 0;
             for (;;) {
                 cursor = mongoc_collection_aggregate(coll, MONGOC_QUERY_NONE, pipeline,
                 NULL,
                                                      NULL);
                 assert(cursor);
-                const bson_t *doc;
+                const bson_t* doc;
                 int fail = 0;
                 while (mongoc_cursor_next(cursor, &doc)) {
                     if (!mongoc_matcher_match(minChunk, doc)) ++fail;

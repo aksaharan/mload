@@ -49,8 +49,8 @@ namespace loader {
         class AbstractChunkDispatch {
         public:
             struct Settings {
-                ChunkDispatcher *owner;
-                EndPointHolder *eph;
+                ChunkDispatcher* owner;
+                EndPointHolder* eph;
                 Bson chunkUB;
             };
 
@@ -61,12 +61,12 @@ namespace loader {
             /**
              * Sends data to the aggregator from the simple queue
              */
-            virtual void push(BsonV *q) = 0;
+            virtual void push(BsonV* q) = 0;
 
             /**
              * Sends data to the aggregator from the simple queue
              */
-            virtual void pushSort(BsonPairDeque *q) = 0;
+            virtual void pushSort(BsonPairDeque* q) = 0;
 
             /**
              * Called after any new input is over
@@ -103,7 +103,7 @@ namespace loader {
             /**
              * Derived classes call this to unload their queues in batches
              */
-            void send(cpp::mtools::DataQueue *q);
+            void send(cpp::mtools::DataQueue* q);
 
         private:
             Settings _settings;
@@ -123,8 +123,8 @@ namespace loader {
             using LoadPlan = cpp::Index<Key, Value, cpp::BSONObjCmp>;
 
             ChunkDispatcher(dispatch::Settings settings,
-                               cpp::mtools::MongoCluster &mCluster,
-                               EndPointHolder *eph,
+                               cpp::mtools::MongoCluster& mCluster,
+                               EndPointHolder* eph,
                                cpp::mtools::MongoCluster::NameSpace ns);
 
             ~ChunkDispatcher() {
@@ -132,7 +132,7 @@ namespace loader {
                 _tp.joinAll();
             }
 
-            Value& at(const Key &key) {
+            Value& at(const Key& key) {
                 return _loadPlan.at(key);
             }
 
@@ -140,14 +140,14 @@ namespace loader {
                 return _ns;
             }
 
-            cpp::mtools::MongoCluster::ShardName getShardForChunk(Key &key) {
+            cpp::mtools::MongoCluster::ShardName getShardForChunk(Key& key) {
                 return _mCluster.getShardForChunk(ns(), key);
             }
 
             /**
              * @return the AbstractChunkDispatch for a chunk in this namespace
              */
-            AbstractChunkDispatch* getOpAggForChunk(Key &key) {
+            AbstractChunkDispatch* getOpAggForChunk(Key& key) {
                 return _loadPlan.at(key).get();
             }
 
@@ -162,7 +162,7 @@ namespace loader {
             /**
              * @return EndPoint for a specific chunk's max key
              */
-            EndPoint* getEndPointForChunk(Key &key) {
+            EndPoint* getEndPointForChunk(Key& key) {
                 return _eph->at(getShardForChunk(key));
             }
 
@@ -224,7 +224,7 @@ namespace loader {
 
         };
 
-        inline void AbstractChunkDispatch::send(cpp::mtools::DataQueue *q) {
+        inline void AbstractChunkDispatch::send(cpp::mtools::DataQueue* q) {
             endPoint()->push(cpp::mtools::OpQueueBulkInsertUnordered::make(owner()->ns(),
                                                                            q,
                                                                            0,
@@ -242,13 +242,13 @@ namespace loader {
             {
             }
 
-            void push(BsonV *q) {
+            void push(BsonV* q) {
                 send(q);
                 //TODO: remove this check
                 assert(q->empty());
             }
 
-            void pushSort(BsonPairDeque *q) {
+            void pushSort(BsonPairDeque* q) {
                 assert(false);
             }
 
@@ -261,7 +261,7 @@ namespace loader {
             void doLoad() {
             }
 
-            static ChunkDispatchPointer create(ChunkDispatcher *owner, EndPointHolder *eph, Bson chunkUB)
+            static ChunkDispatchPointer create(ChunkDispatcher* owner, EndPointHolder* eph, Bson chunkUB)
             {
                 return ChunkDispatchPointer(new ImmediateDispatch(Settings {owner, eph, chunkUB}));
             }
@@ -277,11 +277,11 @@ namespace loader {
             {
             }
 
-            void push(BsonV *q) {
+            void push(BsonV* q) {
                 assert(false);
             }
 
-            void pushSort(BsonPairDeque *q) {
+            void pushSort(BsonPairDeque* q) {
                 //TODO: see if pre sorting is faster
                 _queue.moveIn(q);
                 q->clear();
@@ -293,7 +293,7 @@ namespace loader {
 
             void doLoad();
 
-            static ChunkDispatchPointer create(ChunkDispatcher *owner, EndPointHolder *eph, Bson chunkUB)
+            static ChunkDispatchPointer create(ChunkDispatcher* owner, EndPointHolder* eph, Bson chunkUB)
             {
                 return ChunkDispatchPointer(new RAMQueueDispatch(Settings {owner, eph, chunkUB}));
             }
@@ -316,12 +316,12 @@ namespace loader {
                     + ".bson");
             }
 
-            void push(BsonV *q) {
+            void push(BsonV* q) {
                 _holder.push(std::move(*q));
                 owner()->queueTask([this] {this->spill();});
             }
 
-            void pushSort(BsonPairDeque *q) {
+            void pushSort(BsonPairDeque* q) {
                 assert(false);
             }
 
@@ -335,7 +335,7 @@ namespace loader {
                 assert(false);
             }
 
-            static ChunkDispatchPointer create(ChunkDispatcher *owner, EndPointHolder *eph, Bson chunkUB)
+            static ChunkDispatchPointer create(ChunkDispatcher* owner, EndPointHolder* eph, Bson chunkUB)
             {
                 return ChunkDispatchPointer(new DiskQueueDispatch(Settings {owner, eph, chunkUB}));
             }

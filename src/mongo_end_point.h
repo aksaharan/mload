@@ -160,7 +160,7 @@ namespace cpp {
             }
 
         private:
-            bool pop(DbOpPointer &dbOp) {
+            bool pop(DbOpPointer& dbOp) {
                 return _opQueue.pop(dbOp);
             }
 
@@ -183,17 +183,17 @@ namespace cpp {
             //Note that ShardName can also be a mongoS, but in that case it doesn't much matter
             using MongoEndPointMap = std::unordered_map<cpp::mtools::MongoCluster::ShardName, MongoEndPointPtr>;
 
-            MongoEndPointHolder(MongoEndPointSettings settings, MongoCluster &mCluster) :
+            MongoEndPointHolder(MongoEndPointSettings settings, MongoCluster& mCluster) :
                     _started( false)
             {
                 if (settings.directLoad) {
-                    for (auto &shard : mCluster.shards())
+                    for (auto& shard : mCluster.shards())
                         _epm.emplace(std::make_pair(shard.first,
                                                     MongoEndPointPtr(new MongoEndPoint {settings,
                                                                                         shard.second})));
                 }
                 else {
-                    for (auto &mongoS : mCluster.mongos())
+                    for (auto& mongoS : mCluster.mongos())
                         _epm.emplace(std::make_pair(mongoS, MongoEndPointPtr(new MongoEndPoint {
                                 settings, mongoS})));
                 }
@@ -207,7 +207,7 @@ namespace cpp {
              * @return MongoEndPoint for a specific shard/mongoS (though shouldn't need to be called
              * in the mongoS case)
              */
-            MongoEndPoint* at(const cpp::mtools::MongoCluster::ShardName &shard) {
+            MongoEndPoint* at(const cpp::mtools::MongoCluster::ShardName& shard) {
                 return _epm.at(shard).get();
             }
 
@@ -234,7 +234,7 @@ namespace cpp {
              */
             void start() {
                 _started = true;
-                for (auto &i : _epm)
+                for (auto& i : _epm)
                     i.second->start();
             }
 
@@ -242,7 +242,7 @@ namespace cpp {
              * Have all of the end points shutdown when their queues are cleared, join those threads.
              */
             void gracefulShutdownJoin() {
-                for (auto &ep : _epm)
+                for (auto& ep : _epm)
                     ep.second->gracefulShutdownJoin();
             }
 

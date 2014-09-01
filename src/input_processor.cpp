@@ -19,7 +19,7 @@
 
 namespace loader {
 
-    InputProcessor::InputProcessor(Loader *owner, std::string ns) :
+    InputProcessor::InputProcessor(Loader* owner, std::string ns) :
             _owner(owner),
             _ns(ns),
             _inputAggregator(_owner->queueSettings(), owner->cluster(), &owner->chunkDispatcher(), ns),
@@ -55,11 +55,11 @@ namespace loader {
         return std::move(_docLoc);
     }
 
-    void InputProcessor::processSegmentToAggregator(const cpp::LocSegment &segment,
+    void InputProcessor::processSegmentToAggregator(const cpp::LocSegment& segment,
                                                cpp::LogicalLoc logicalLoc)
     {
         _docLogicalLoc = logicalLoc;
-        //May need to switch to void getFields(unsigned n, const char **fieldNames, BSONElement *fields) const;
+        //May need to switch to void getFields(unsigned n, const char **fieldNames, BSONElement* fields) const;
         const bson::bo keys = _owner->settings().shardKeysBson;
         int nFields = keys.nFields();
         _input.reset(new InputFormatJson(segment));
@@ -105,7 +105,7 @@ namespace loader {
             if (_owner->settings().hashed) _docShardKey =
                     BSON("_id-hash" << mongo::BSONElementHasher::hash64(_docShardKey.firstElement(), mongo::BSONElementHasher::DEFAULT_HASH_SEED));
             _extra = &extra;
-            auto *stage = _inputAggregator.getStage(_docShardKey);
+            auto* stage = _inputAggregator.getStage(_docShardKey);
             stage->push(this);
             _docLoc.start = _input->pos();
         }

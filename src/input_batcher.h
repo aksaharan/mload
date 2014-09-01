@@ -63,7 +63,7 @@ namespace loader {
             /**
              * Push is called when the LoadBuilder is ready to have any values required read
              */
-            virtual void push(DocumentBuilder *stage) = 0;
+            virtual void push(DocumentBuilder* stage) = 0;
 
             /**
              * Is the queue empty?
@@ -104,7 +104,7 @@ namespace loader {
             }
 
         protected:
-            AbstractInputQueue(InputAggregator *owner, Bson UBIndex);
+            AbstractInputQueue(InputAggregator* owner, Bson UBIndex);
 
         private:
             InputAggregator *_owner;
@@ -120,8 +120,8 @@ namespace loader {
         class InputAggregator {
         public:
             InputAggregator(Settings settings,
-                            cpp::mtools::MongoCluster &mCluster,
-                            dispatch::ChunkDispatcher *out,
+                            cpp::mtools::MongoCluster& mCluster,
+                            dispatch::ChunkDispatcher* out,
                             cpp::mtools::MongoCluster::NameSpace ns) :
                     _settings(std::move(settings)),
                     _mCluster(mCluster),
@@ -140,7 +140,7 @@ namespace loader {
              * @return the stage for a single bson value.
              */
             //TODO: Look at forcing more localization on the search
-            AbstractInputQueue* getStage(const Bson &indexValue) {
+            AbstractInputQueue* getStage(const Bson& indexValue) {
                 return _inputPlan.upperBound(indexValue).get();
             }
 
@@ -164,7 +164,7 @@ namespace loader {
             /**
              * Sets up a single name space
              */
-            void init(const cpp::mtools::MongoCluster::NameSpace &ns);
+            void init(const cpp::mtools::MongoCluster::NameSpace& ns);
 
             /**
              * Clear the queues
@@ -174,7 +174,7 @@ namespace loader {
             cpp::mtools::MongoCluster& cluster() {
                 return _mCluster;
             }
-            dispatch::ChunkDispatcher *out() {
+            dispatch::ChunkDispatcher* out() {
                 return _out;
             }
 
@@ -188,13 +188,13 @@ namespace loader {
 
         class DirectQueue : public AbstractInputQueue {
         public:
-            DirectQueue(InputAggregator *owner, Bson UBIndex) :
+            DirectQueue(InputAggregator* owner, Bson UBIndex) :
                     AbstractInputQueue(owner, std::move(UBIndex))
             {
                 _bsonHolder.reserve(queueSize());
             }
 
-            void push(DocumentBuilder *stage) {
+            void push(DocumentBuilder* stage) {
                 _bsonHolder.push_back(stage->getFinalDoc());
                 if (_bsonHolder.size() > queueSize()) {
                     postTo()->push(&_bsonHolder);
@@ -206,7 +206,7 @@ namespace loader {
                 if (!_bsonHolder.empty()) postTo()->push(&_bsonHolder);
             }
 
-            static AbstractInputQueuePointer create(InputAggregator *owner, const Bson &UBIndex) {
+            static AbstractInputQueuePointer create(InputAggregator* owner, const Bson& UBIndex) {
                 return AbstractInputQueuePointer(new DirectQueue(owner, UBIndex));
             }
 
@@ -220,12 +220,12 @@ namespace loader {
 
         class RAMQueue : public AbstractInputQueue {
         public:
-            RAMQueue(InputAggregator *owner, Bson UBIndex) :
+            RAMQueue(InputAggregator* owner, Bson UBIndex) :
                 AbstractInputQueue(owner, std::move(UBIndex))
             {
             }
 
-            void push(DocumentBuilder *stage) {
+            void push(DocumentBuilder* stage) {
                 _bsonHolder.push_back(std::make_pair(stage->getIndex(), stage->getFinalDoc()));
                 if (_bsonHolder.size() > queueSize()) {
                     postTo()->pushSort(&_bsonHolder);
@@ -240,7 +240,7 @@ namespace loader {
                 return _bsonHolder.empty();
             }
 
-            static AbstractInputQueuePointer create(InputAggregator *owner, Bson UBIndex)
+            static AbstractInputQueuePointer create(InputAggregator* owner, Bson UBIndex)
             {
                 return AbstractInputQueuePointer(new RAMQueue(owner, std::move(UBIndex)));
             }
@@ -256,14 +256,14 @@ namespace loader {
          */
         class IndexedBucketQueue : public DirectQueue {
         public:
-            IndexedBucketQueue(InputAggregator *owner, const Bson &UBIndex) :
+            IndexedBucketQueue(InputAggregator* owner, const Bson& UBIndex) :
                     DirectQueue(owner, UBIndex)
             {
             }
 
-            static AbstractInputQueuePointer create(InputAggregator *owner,
-                                           const Bson &UBIndex,
-                                           const Bson &index)
+            static AbstractInputQueuePointer create(InputAggregator* owner,
+                                           const Bson& UBIndex,
+                                           const Bson& index)
             {
                 return AbstractInputQueuePointer(new IndexedBucketQueue(owner, UBIndex));
             }

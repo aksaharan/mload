@@ -32,7 +32,7 @@ namespace cpp {
      * you may get differing sizes, it shouldn't matter as long as that isn't going to break
      * things, in the code here it shoudln't.
      *
-     * Max size is *not* enforced, the users need to call the checking functions if that is desired.
+     * Max size is* not* enforced, the users need to call the checking functions if that is desired.
      */
     template<typename _Tp, template<typename, typename > class _Tc>
     class BasicConcurrentQueue {
@@ -50,12 +50,12 @@ namespace cpp {
         {
         }
 
-        void swap(ContainerType &from) {
+        void swap(ContainerType& from) {
             MutexLockGuard lock(*_mutex);
             _container.swap(from);
         }
 
-        bool pop(value_type &ret) {
+        bool pop(value_type& ret) {
             MutexLockGuard lock(*_mutex);
             if (_container.empty()) return false;
             ret = (std::move(_container.front()));
@@ -96,7 +96,7 @@ namespace cpp {
          * @return true if there are any entries added to the container.
          */
         template<typename U>
-        bool popToPushBack(U *ret, size_t count = 10) {
+        bool popToPushBack(U* ret, size_t count = 10) {
             MutexLockGuard lock(*_mutex);
             if (_container.size() < count) {
                 if (_container.empty()) return false;
@@ -146,7 +146,7 @@ namespace cpp {
          * Uses std::move to place each item from the input container in the queue's container.
          */
         template<typename U>
-        void moveIn(U *u) {
+        void moveIn(U* u) {
             moveIn(u->begin(), u->end());
         }
 

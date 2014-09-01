@@ -27,8 +27,8 @@ namespace loader {
         }
 
         ChunkDispatcher::ChunkDispatcher(Settings settings,
-                                               cpp::mtools::MongoCluster &mCluster,
-                                               EndPointHolder *eph,
+                                               cpp::mtools::MongoCluster& mCluster,
+                                               EndPointHolder* eph,
                                                cpp::mtools::MongoCluster::NameSpace ns) :
                 _settings(std::move(settings)),
                 _tp(_settings.workThreads),
@@ -44,7 +44,7 @@ namespace loader {
         void ChunkDispatcher::init() {
             std::unordered_map<cpp::mtools::MongoCluster::ShardName, size_t> shardChunkCounters;
             //Assuming that nsChunks is in sorted order, or the stage setup won't work right
-            for (auto &iCm : _mCluster.nsChunks(ns())) {
+            for (auto& iCm : _mCluster.nsChunks(ns())) {
                 _loadPlan.insertUnordered(std::get<0>(iCm), ChunkDispatchPointer {});
                 size_t depth = ++(shardChunkCounters[std::get<1>(iCm)->first]);
                 //TODO: change this to a factory that creates queues based on chunk depth in the shard
@@ -57,13 +57,13 @@ namespace loader {
 
         ChunkDispatcher::OrderedWaterFall ChunkDispatcher::getWaterFall() {
             std::unordered_map<cpp::mtools::MongoCluster::ShardName, std::deque<AbstractChunkDispatch*>> chunksort;
-            for (auto &i : _mCluster.nsChunks(_ns))
+            for (auto& i : _mCluster.nsChunks(_ns))
                 chunksort[std::get<1>(i)->first].emplace_back(getOpAggForChunk(std::get<0>(i)));
             OrderedWaterFall wf;
             for (;;) {
                 bool added = false;
-                for (auto &i : chunksort) {
-                    auto &q = i.second;
+                for (auto& i : chunksort) {
+                    auto& q = i.second;
                     if (q.size()) {
                         added = true;
                         wf.push_back(q.back());
@@ -78,7 +78,7 @@ namespace loader {
         void RAMQueueDispatch::doLoad() {
             cpp::mtools::DataQueue sendQueue;
             size_t queueSize = owner()->queueSize();
-            for (auto &i : _queue.unSafeAccess()) {
+            for (auto& i : _queue.unSafeAccess()) {
                 sendQueue.emplace_back(i.second);
                 if (sendQueue.size() >= queueSize) {
                     send(&sendQueue);
